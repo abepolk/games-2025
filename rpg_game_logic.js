@@ -33,14 +33,14 @@ class Player {
 }
 
 class Weapon {
-    constructor(baseDamage, bonusDamageMin, bonusDamageMax) {
+    constructor({ baseDamage, bonusDamageMin, bonusDamageMax }) {
         this.baseDamage = baseDamage;
         this.bonusDamageMin = bonusDamageMin;
         this.bonusDamageMax = bonusDamageMax;
     }
 
     attackDamage() {
-        return this.baseDamage + Math.floor(Math.random() * bonusDamageMax) + this.bonusDamageMin;
+        return this.baseDamage + Math.floor(Math.random() * this.bonusDamageMax) + this.bonusDamageMin;
     }
 }
 
@@ -87,6 +87,7 @@ const BattleSceneAction = Object.freeze({
     SHIELD: "SHIELD",
     QUIT: "QUIT"
 });
+
 
 
 class GameLogic {
@@ -154,36 +155,41 @@ class GameLogic {
     #enemyAttack(player, enemy) {
         let enemyDamage = enemy.attackDamage();
         player.applyDamage(enemyDamage);
-        this.#log("Enemy attacks for " + enemyDamage + " damage!");
+        this.#log(`Enemy attacks for ${enemyDamage} damage!`);
     }
 
     #loadPlayer() {
-        return new Player(new Weapon(baseDamage = 3, bonusDamageMin = 0, bonusDamageMax = 2));
+        return new Player(new Weapon({
+            baseDamage: 3,
+            bonusDamageMin: 0,
+            bonusDamageMax: 2
+        }));
     }
 
     #getEnemyWeapon(enemyLevel) {
-        return new Weapon(
-            baseDamage = enemyLevel,
-            bonusDamageMin = 1 + Math.floor(enemyLevel / 10),
-            bonusDamageMax = 2 + Math.floor(enemyLevel / 5),
+        return new Weapon({
+            baseDamage: enemyLevel,
+            bonusDamageMin: 1 + Math.floor(enemyLevel / 10),
+            bonusDamageMax: 2 + Math.floor(enemyLevel / 5),
+        }
         );
     }
 
-    #this.#loadEnemy(enemyLevel) {
+    #loadEnemy(enemyLevel) {
         return new Enemy(enemyLevel, this.#getEnemyWeapon(enemyLevel));
     }
 
     #printStatus(player, enemy) {
-        let result = "Player Shield: " + player.shield + "/" + player.shieldMax + "\n";
-        result += "Enemy Shield: " + enemy.shield + "/" + enemy.shieldMax + "\n";
+        let result = `Player Shield: ${player.shield}/${player.shieldMax}\n`;
+        result += `Enemy Shield: ${enemy.shield}/${enemy.shieldMax}\n`;
         return result;
     }
 
     handleAction(clientGameScene, action) {
-        // console.log("handleAction() called with game scene " + clientGameScene + ", action " + action);
-        // console.log("this.gameScene " + this.gameScene);
+        // console.log(`handleAction() called with game scene ${clientGameScene}, action ${action}`);
+        // console.log(`this.gameScene ${this.gameScene}`);
         if (clientGameScene !== this.gameScene) {
-            return { "error": "Client game scene was " + clientGameScene + " but server game scene was " + this.gameScene };
+            return { "error": `Client game scene was ${clientGameScene} but server game scene was ${this.gameScene}` };
         }
         if (this.gameScene === GameScene.BATTLE_SCENE) {
             if (false === action in BattleSceneAction) {
@@ -211,14 +217,14 @@ class GameLogic {
             } else {
                 // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
                 console.assert(false);
-                this.#log("Unknown command " + action);
+                this.#log(`Unknown command ${action}`);
                 return this.#serializeBadAction(action, "MenuSceneAction");
             }
         } else if (this.gameScene === GameScene.BATTLE_SCENE) {
             if (action === BattleSceneAction.ATTACK) {
                 let damage = this.player.attackDamage();
                 this.enemy.applyDamage(damage);
-                this.#log("Player attacks for " + damage + " damage!");
+                this.#log(`Player attacks for ${damage} damage!`);
                 if (this.enemy.defeated) {
                     this.#log(this.#printStatus(this.player, this.enemy));
                     this.#log("Enemy defeated!");
@@ -226,7 +232,7 @@ class GameLogic {
                     let rechargeBonus = 5 + Math.floor(this.enemy.level / 5);
                     this.player.rechargeShield(rechargeBonus);
                     this.#log(
-                        "Shield recharged by " + rechargeBonus + " to " + this.player.shield + "/" + this.player.shieldMax
+                        `Shield recharged by ${rechargeBonus} to ${this.player.shield}/${this.player.shieldMax}`
                     );
                     this.gameScene = GameScene.MENU_SCENE;
                 } else {
@@ -235,37 +241,35 @@ class GameLogic {
                     this.#log(this.#printStatus(this.player, this.enemy));
                     if (this.player.defeated) {
                         this.#log(
-                            "Player defeated after winning " + this.enemeisDefeated + " battles! Game Over."
+                            `Player defeated after winning ${this.enemiesDefeated} battles! Game Over.`
                         );
                         // TODO: Handle player defeated
                     }
                     this.player.rechargeShield(this.player.baseShieldRecharge);
-                    this.#log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
+                    this.#log(`Player shield recharges by ${this.player.baseShieldRecharge} to ${this.player.shield} / ${this.player.shieldMax}`);
                     this.#log(this.#printStatus(this.player, this.enemy));
                 }
             } else if (action === BattleSceneAction.SHIELD) {
                 let recharge = this.player.focusedShieldRecharge();
                 this.player.rechargeShield(recharge);
-                this.#log("Focusing the shield recharges by " + recharge + " to " + this.player.shield + "/" + this.player.shieldMax);
+                this.#log(`Focusing the shield recharges by ${recharge} to ${this.player.shield}/${this.player.shieldMax}`);
                 // TODO: This section repeated ==ENEMY ATTACK==
                 this.#enemyAttack(this.player, this.enemy);
                 this.#log(this.#printStatus(this.player, this.enemy));
                 if (this.player.defeated) {
-                    this.#log(
-                        "Player defeated after winning " + this.enemiesDefeated + " battles! Game Over."
-                    );
+                    this.#log(`Player defeated after winning ${this.enemiesDefeated} battles! Game Over.`);
                     // TODO: Handle player defeated
                 }
                 this.player.rechargeShield(this.player.baseShieldRecharge);
-                this.#log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
+                this.#log(`Player shield recharges by ${this.player.baseShieldRecharge} to ${this.player.shield}/${this.player.shieldMax}`);
                 this.#log(this.#printStatus(this.player, this.enemy));
             } else if (action === BattleSceneAction.QUIT) {
                 this.gameScene = GameScene.QUIT;
             }
         } else {
             console.assert(false);
-            this.#log("Unknown scene " + this.gameScene);
-            return this.#serializeError(this.gameScene + " is not a valid name for a GameScene");
+            this.#log(`Unknown scene ${this.gameScene}`);
+            return this.#serializeError(`${this.gameScene} is not a valid name for a GameScene`);
         }
         return this.#serializeState();
     }
