@@ -121,7 +121,7 @@ class GameLogic {
         this.logCallback = logCallback;
     }
 
-    _log(text) {
+    #log(text) {
         try {
             if (!text.endsWith("\n")) {
                 text += "\n";
@@ -133,14 +133,14 @@ class GameLogic {
     }
 
 
-    _serializePlayer() {
+    #serializePlayer() {
         return {
             shield: this.player.shield,
             shieldMax: this.player.shieldMax
         };
     }
 
-    _serializeEnemy() {
+    #serializeEnemy() {
         return {
             "shield": this.enemy.shield,
             "shieldMax": this.enemy.shieldMax,
@@ -148,57 +148,57 @@ class GameLogic {
         };
     }
 
-    _serializeGameScene() {
-        return this.game_scene;
+    #serializeGameScene() {
+        return this.gameScene;
     }
 
-    _serializeState() {
+    #serializeState() {
         return {
-            "player": this._serializePlayer(),
-            "enemy": this._serializeEnemy(),
-            "game_scene": this._serializeGameScene()
+            "player": this.#serializePlayer(),
+            "enemy": this.#serializeEnemy(),
+            "gameScene": this.#serializeGameScene()
         }
     }
 
-    _serializeError(errorMessage) {
+    #serializeError(errorMessage) {
         return { "error": errorMessage };
     }
 
-    _serializeBadAction(action, actionKind) {
-        return this._serializeError(action + " is not a valid name for a " + actionKind);
+    #serializeBadAction(action, actionKind) {
+        return this.#serializeError(action + " is not a valid name for a " + actionKind);
     }
 
     getState() {
-        return this._serializeState();
+        return this.#serializeState();
     }
 
-    enemyAttack(player, enemy) {
+    #enemyAttack(player, enemy) {
         let enemyDamage = enemy.attackDamage();
         player.applyDamage(enemyDamage);
-        this._log("Enemy attacks for " + enemyDamage + " damage!");
+        this.#log("Enemy attacks for " + enemyDamage + " damage!");
     }
 
     handleAction(clientGameScene, action) {
         // console.log("handleAction() called with game scene " + clientGameScene + ", action " + action);
-        // console.log("this.game_scene " + this.gameScene);
+        // console.log("this.gameScene " + this.gameScene);
         if (clientGameScene !== this.gameScene) {
             return { "error": "Client game scene was " + clientGameScene + " but server game scene was " + this.gameScene };
         }
         if (this.gameScene === GameScene.BATTLE_SCENE) {
             if (false === action in BattleSceneAction) {
-                return _serializeBadAction(action, "BattleSceneAction");
+                return this.#serializeBadAction(action, "BattleSceneAction");
             }
         }
         if (this.gameScene === GameScene.MENU_SCENE) {
             if (false === action in MenuSceneAction) {
-                return _serializeBadAction(action, "MenuSceneAction");
+                return this.#serializeBadAction(action, "MenuSceneAction");
             }
         }
 
         // TODO: would it be better to have a separate function for each scene to handle that scene's actions?
         if (this.gameScene === GameScene.MENU_SCENE) {
             if (action === MenuSceneAction.SAVE) {
-                this._log("Saving not implemented yet.");
+                this.#log("Saving not implemented yet.");
             } else if (action === MenuSceneAction.QUIT) {
                 this.gameScene = GameScene.QUIT;
                 // TODO: handle quitting
@@ -206,67 +206,67 @@ class GameLogic {
                 this.enemyLevel += 1;
                 this.enemy = loadEnemy(this.enemyLevel);
                 this.gameScene = GameScene.BATTLE_SCENE;
-                this._log(printStatus(this.player, this.enemy));
+                this.#log(printStatus(this.player, this.enemy));
             } else {
                 // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
                 console.assert(false);
-                this._log("Unknown command " + action);
-                return this._serializeBadAction(action, "MenuSceneAction");
+                this.#log("Unknown command " + action);
+                return this.#serializeBadAction(action, "MenuSceneAction");
             }
         } else if (this.gameScene === GameScene.BATTLE_SCENE) {
             if (action === BattleSceneAction.ATTACK) {
                 let damage = this.player.attackDamage();
                 this.enemy.applyDamage(damage);
-                this._log("Player attacks for " + damage + " damage!");
+                this.#log("Player attacks for " + damage + " damage!");
                 if (this.enemy.defeated) {
-                    this._log(printStatus(this.player, this.enemy));
-                    this._log("Enemy defeated!");
+                    this.#log(printStatus(this.player, this.enemy));
+                    this.#log("Enemy defeated!");
                     this.enemiesDefeated++;
                     let rechargeBonus = 5 + Math.floor(this.enemy.level / 5);
                     this.player.rechargeShield(rechargeBonus);
-                    this._log(
+                    this.#log(
                         "Shield recharged by " + rechargeBonus + " to " + this.player.shield + "/" + this.player.shieldMax
                     );
                     this.gameScene = GameScene.MENU_SCENE;
                 } else {
                     // TODO: This section repeated ==ENEMY ATTACK==
-                    this.enemyAttack(this.player, this.enemy);
-                    this._log(printStatus(this.player, this.enemy));
+                    this.#enemyAttack(this.player, this.enemy);
+                    this.#log(printStatus(this.player, this.enemy));
                     if (this.player.defeated) {
-                        this._log(
+                        this.#log(
                             "Player defeated after winning " + this.enemeisDefeated + " battles! Game Over."
                         );
                         // TODO: Handle player defeated
                     }
                     this.player.rechargeShield(this.player.baseShieldRecharge);
-                    this._log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
-                    this._log(printStatus(this.player, this.enemy));
+                    this.#log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
+                    this.#log(printStatus(this.player, this.enemy));
                 }
             } else if (action === BattleSceneAction.SHIELD) {
                 let recharge = this.player.focusedShieldRecharge();
                 this.player.rechargeShield(recharge);
-                this._log("Focusing the shield recharges by " + recharge + " to " + this.player.shield + "/" + this.player.shieldMax);
+                this.#log("Focusing the shield recharges by " + recharge + " to " + this.player.shield + "/" + this.player.shieldMax);
                 // TODO: This section repeated ==ENEMY ATTACK==
-                this.enemyAttack(this.player, this.enemy);
-                this._log(printStatus(this.player, this.enemy));
+                this.#enemyAttack(this.player, this.enemy);
+                this.#log(printStatus(this.player, this.enemy));
                 if (this.player.defeated) {
-                    this._log(
+                    this.#log(
                         "Player defeated after winning " + this.enemiesDefeated + " battles! Game Over."
                     );
                     // TODO: Handle player defeated
                 }
                 this.player.rechargeShield(this.player.baseShieldRecharge);
-                this._log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
-                this._log(printStatus(this.player, this.enemy));
+                this.#log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
+                this.#log(printStatus(this.player, this.enemy));
             } else if (action === BattleSceneAction.QUIT) {
                 this.gameScene = GameScene.QUIT;
             }
         } else {
             console.assert(false);
-            this._log("Unknown scene " + this.gameScene);
-            return _serializeError(this.gameScene + " is not a valid name for a GameScene");
+            this.#log("Unknown scene " + this.gameScene);
+            return this.#serializeError(this.gameScene + " is not a valid name for a GameScene");
         }
-        return this._serializeState();
+        return this.#serializeState();
     }
 }
 
