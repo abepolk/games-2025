@@ -88,31 +88,10 @@ const BattleSceneAction = Object.freeze({
     QUIT: "QUIT"
 });
 
-function loadPlayer() {
-    return new Player(new Weapon(baseDamage = 3, bonusDamageMin = 0, bonusDamageMax = 2));
-}
-
-function getEnemyWeapon(enemyLevel) {
-    return new Weapon(
-        baseDamage = enemyLevel,
-        bonusDamageMin = 1 + Math.floor(enemyLevel / 10),
-        bonusDamageMax = 2 + Math.floor(enemyLevel / 5),
-    );
-}
-
-function loadEnemy(enemyLevel) {
-    return new Enemy(enemyLevel, getEnemyWeapon(enemyLevel));
-}
-
-function printStatus(player, enemy) {
-    let result = "Player Shield: " + player.shield + "/" + player.shieldMax + "\n";
-    result += "Enemy Shield: " + enemy.shield + "/" + enemy.shieldMax + "\n";
-    return result;
-}
 
 class GameLogic {
     constructor(logCallback) {
-        this.player = loadPlayer();
+        this.player = this.#loadPlayer();
         this.enemy = null;
         this.enemiesDefeated = 0;
         this.enemyLevel = 0;
@@ -128,7 +107,7 @@ class GameLogic {
             }
             this.logCallback(text);
         } catch (e) {
-            console.log(`Got bad input to _log: ${text}, type: ${typeof text}`);
+            console.log(`Got bad input to #log: ${text}, type: ${typeof text}`);
         }
     }
 
@@ -178,6 +157,28 @@ class GameLogic {
         this.#log("Enemy attacks for " + enemyDamage + " damage!");
     }
 
+    #loadPlayer() {
+        return new Player(new Weapon(baseDamage = 3, bonusDamageMin = 0, bonusDamageMax = 2));
+    }
+
+    #getEnemyWeapon(enemyLevel) {
+        return new Weapon(
+            baseDamage = enemyLevel,
+            bonusDamageMin = 1 + Math.floor(enemyLevel / 10),
+            bonusDamageMax = 2 + Math.floor(enemyLevel / 5),
+        );
+    }
+
+    #this.#loadEnemy(enemyLevel) {
+        return new Enemy(enemyLevel, this.#getEnemyWeapon(enemyLevel));
+    }
+
+    #printStatus(player, enemy) {
+        let result = "Player Shield: " + player.shield + "/" + player.shieldMax + "\n";
+        result += "Enemy Shield: " + enemy.shield + "/" + enemy.shieldMax + "\n";
+        return result;
+    }
+
     handleAction(clientGameScene, action) {
         // console.log("handleAction() called with game scene " + clientGameScene + ", action " + action);
         // console.log("this.gameScene " + this.gameScene);
@@ -204,9 +205,9 @@ class GameLogic {
                 // TODO: handle quitting
             } else if (action === MenuSceneAction.BATTLE) {
                 this.enemyLevel += 1;
-                this.enemy = loadEnemy(this.enemyLevel);
+                this.enemy = this.#loadEnemy(this.enemyLevel);
                 this.gameScene = GameScene.BATTLE_SCENE;
-                this.#log(printStatus(this.player, this.enemy));
+                this.#log(this.#printStatus(this.player, this.enemy));
             } else {
                 // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
                 console.assert(false);
@@ -219,7 +220,7 @@ class GameLogic {
                 this.enemy.applyDamage(damage);
                 this.#log("Player attacks for " + damage + " damage!");
                 if (this.enemy.defeated) {
-                    this.#log(printStatus(this.player, this.enemy));
+                    this.#log(this.#printStatus(this.player, this.enemy));
                     this.#log("Enemy defeated!");
                     this.enemiesDefeated++;
                     let rechargeBonus = 5 + Math.floor(this.enemy.level / 5);
@@ -231,7 +232,7 @@ class GameLogic {
                 } else {
                     // TODO: This section repeated ==ENEMY ATTACK==
                     this.#enemyAttack(this.player, this.enemy);
-                    this.#log(printStatus(this.player, this.enemy));
+                    this.#log(this.#printStatus(this.player, this.enemy));
                     if (this.player.defeated) {
                         this.#log(
                             "Player defeated after winning " + this.enemeisDefeated + " battles! Game Over."
@@ -240,7 +241,7 @@ class GameLogic {
                     }
                     this.player.rechargeShield(this.player.baseShieldRecharge);
                     this.#log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
-                    this.#log(printStatus(this.player, this.enemy));
+                    this.#log(this.#printStatus(this.player, this.enemy));
                 }
             } else if (action === BattleSceneAction.SHIELD) {
                 let recharge = this.player.focusedShieldRecharge();
@@ -248,7 +249,7 @@ class GameLogic {
                 this.#log("Focusing the shield recharges by " + recharge + " to " + this.player.shield + "/" + this.player.shieldMax);
                 // TODO: This section repeated ==ENEMY ATTACK==
                 this.#enemyAttack(this.player, this.enemy);
-                this.#log(printStatus(this.player, this.enemy));
+                this.#log(this.#printStatus(this.player, this.enemy));
                 if (this.player.defeated) {
                     this.#log(
                         "Player defeated after winning " + this.enemiesDefeated + " battles! Game Over."
@@ -257,7 +258,7 @@ class GameLogic {
                 }
                 this.player.rechargeShield(this.player.baseShieldRecharge);
                 this.#log("Player shield recharges by " + this.player.baseShieldRecharge + " to " + this.player.shield + "/" + this.player.shieldMax);
-                this.#log(printStatus(this.player, this.enemy));
+                this.#log(this.#printStatus(this.player, this.enemy));
             } else if (action === BattleSceneAction.QUIT) {
                 this.gameScene = GameScene.QUIT;
             }
