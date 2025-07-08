@@ -242,8 +242,8 @@ class GameLogic {
     *
     * {
     *   gameScene: "BATTLE_SCENE",
-    *   enemy: Object { shield: 10, shieldMax: 20, level: 1 },
-    *   player: Object { shield: 10, shieldMax: 100 }
+    *   enemy: { shield: 10, shieldMax: 20, level: 1 },
+    *   player: { shield: 10, shieldMax: 100 }
     * }
     *
     * but if there's an error it will instead be
