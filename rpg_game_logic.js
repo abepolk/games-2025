@@ -1,3 +1,6 @@
+/*
+* Player tracks the player character's state and describes some behavior.
+*/
 class Player {
     constructor(weapon) {
         this.level = 1;
@@ -32,6 +35,9 @@ class Player {
     }
 }
 
+/*
+* Weapon is used by both Player and Enemy and defines attack behavior.
+*/
 class Weapon {
     constructor({ baseDamage, bonusDamageMin, bonusDamageMax }) {
         this.baseDamage = baseDamage;
@@ -44,9 +50,10 @@ class Weapon {
     }
 }
 
-
+/*
+* Enemy is similar to Player and tracks an opponent's state and some behavior.
+*/
 class Enemy {
-
     constructor(level, weapon) {
         this.shieldMax = 20;
         this.shield = 10;
@@ -70,18 +77,36 @@ class Enemy {
     }
 }
 
+/*
+* Enum to track modal behavior.
+* MENU_SCENE is between battles, BATTLE_SCENE is during a battle
+* Different actions are available depending on the scene.
+*
+* TODO: QUIT is unused
+*/
 const GameScene = Object.freeze({
     MENU_SCENE: "MENU_SCENE",
     BATTLE_SCENE: "BATTLE_SCENE",
     QUIT: "QUIT"
 });
 
+/*
+* Taking the BATTLE action when in MENU_SCENE mode switches to the BATTLE_SCENE
+*
+* TODO: QUIT is unused
+*/
 const MenuSceneAction = Object.freeze({
     BATTLE: "BATTLE",
     SAVE: "SAVE",
     QUIT: "QUIT"
 });
 
+/*
+* When an enemy is defeated, we automatically switch back to MENU_SCENE
+*
+* TODO: When the player is defeated, nothing happens
+* TODO: QUIT is unused
+*/
 const BattleSceneAction = Object.freeze({
     ATTACK: "ATTACK",
     SHIELD: "SHIELD",
@@ -89,8 +114,20 @@ const BattleSceneAction = Object.freeze({
 });
 
 
-
+/*
+* This is the controller of the game and the class that clients/UI interacts with.
+* The intended use is to create one instance and call getState() to get the initial game state.
+* Then when the user takes actions, call handleAction(),
+* which will update the state and return the new state.
+*/
 class GameLogic {
+    /*
+    * logCallback should take a single parameter (a string) and will get called when
+    * GameLogic has a message, usually info about what's happening in the game.
+    * Generally these are intended as messages to the player. There are a few places where
+    * this gets called with error type messages.
+    * TODO: perhaps we want to separate out error messages so they can be displayed differently.
+    */
     constructor(logCallback) {
         this.player = this.#loadPlayer();
         this.enemy = null;
@@ -148,6 +185,12 @@ class GameLogic {
         return this.#serializeError(action + " is not a valid name for a " + actionKind);
     }
 
+    /*
+    * Returns the state of the game. Should be called after instantiating a GameLogic
+    * instance to get the initial state. Since handleAction also returns the game state,
+    * this probably doesn't need to get called later. See handleAction for info about the
+    * contents of the game state.
+    */
     getState() {
         return this.#serializeState();
     }
@@ -185,6 +228,27 @@ class GameLogic {
         return result;
     }
 
+    /*
+    * clientGameScene: one of the GameScene enum options. This is passed in to confirm that
+    *   the caller's game scene matches the GameLogic game scene. This helped me catch a couple
+    *   bugs but isn't really useful if everything's working right, so we could consider removing it.
+    * action: the action to take. Options depend on the GameScene and are either an option from
+    *   MenuSceneAction or BattleSceneAction.
+    *
+    * Updates the game based on the supplied action, calls the logCallback to report game info
+    * to the user, and returns the new game state that resulted from the action.
+    *
+    * Usually the returned game state will look like
+    *
+    * {
+    *   gameScene: "BATTLE_SCENE",
+    *   enemy: Object { shield: 10, shieldMax: 20, level: 1 },
+    *   player: Object { shield: 10, shieldMax: 100 }
+    * }
+    *
+    * but if there's an error it will instead be
+    * { error: "error message" }
+    */
     handleAction(clientGameScene, action) {
         // console.log(`handleAction() called with game scene ${clientGameScene}, action ${action}`);
         // console.log(`this.gameScene ${this.gameScene}`);
