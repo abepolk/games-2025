@@ -87,7 +87,6 @@ class Enemy {
 const GameScene = Object.freeze({
     MENU_SCENE: "MENU_SCENE",
     BATTLE_SCENE: "BATTLE_SCENE",
-    QUIT: "QUIT"
 });
 
 /*
@@ -98,7 +97,7 @@ const GameScene = Object.freeze({
 const MenuSceneAction = Object.freeze({
     BATTLE: "BATTLE",
     SAVE: "SAVE",
-    QUIT: "QUIT"
+    RESTART: "RESTART"
 });
 
 /*
@@ -110,7 +109,7 @@ const MenuSceneAction = Object.freeze({
 const BattleSceneAction = Object.freeze({
     ATTACK: "ATTACK",
     SHIELD: "SHIELD",
-    QUIT: "QUIT"
+    CONCEDE: "CONCEDE"
 });
 
 
@@ -129,13 +128,16 @@ class GameLogic {
     * TODO: perhaps we want to separate out error messages so they can be displayed differently.
     */
     constructor(logCallback) {
+        this.#initializeGame();
+        this.logCallback = logCallback;
+    }
+
+    #initializeGame() {
         this.player = this.#loadPlayer();
         this.enemy = null;
         this.enemiesDefeated = 0;
         this.enemyLevel = 0;
         this.gameScene = GameScene.MENU_SCENE;
-        this.message = "Welcome to the game. Battle (b), Save (s), or Quit (q):";
-        this.logCallback = logCallback;
     }
 
     #log(text) {
@@ -153,16 +155,21 @@ class GameLogic {
     #serializePlayer() {
         return {
             shield: this.player.shield,
-            shieldMax: this.player.shieldMax
+            shieldMax: this.player.shieldMax,
+            defeated: this.player.defeated
         };
     }
 
     #serializeEnemy() {
-        return {
-            "shield": this.enemy.shield,
-            "shieldMax": this.enemy.shieldMax,
-            "level": this.enemy.level,
-        };
+        if (this.enemy === null) {
+            return {};
+        } else {
+            return {
+                "shield": this.enemy.shield,
+                "shieldMax": this.enemy.shieldMax,
+                "level": this.enemy.level,
+            };
+        }
     }
 
     #serializeGameScene() {
@@ -173,7 +180,7 @@ class GameLogic {
         return {
             "player": this.#serializePlayer(),
             "enemy": this.#serializeEnemy(),
-            "gameScene": this.#serializeGameScene()
+            "gameScene": this.#serializeGameScene(),
         }
     }
 
@@ -224,7 +231,11 @@ class GameLogic {
 
     #printStatus(player, enemy) {
         let result = `Player Shield: ${player.shield}/${player.shieldMax}\n`;
-        result += `Enemy Shield: ${enemy.shield}/${enemy.shieldMax}\n`;
+        if (enemy === null) {
+            result += "Enemy Shield: N/A\n";
+        } else {
+            result += `Enemy Shield: ${enemy.shield}/${enemy.shieldMax}\n`;
+        }
         return result;
     }
 
@@ -246,7 +257,9 @@ class GameLogic {
     *   player: { shield: 10, shieldMax: 100 }
     * }
     *
-    * but if there's an error it will instead be
+    * Note that enemy can be {}, for example on first load and after restarting the game.
+    *
+    * And finally if there's an error the entire response from handleAction will be of the form
     * { error: "error message" }
     */
     handleAction(clientGameScene, action) {
@@ -270,14 +283,19 @@ class GameLogic {
         if (this.gameScene === GameScene.MENU_SCENE) {
             if (action === MenuSceneAction.SAVE) {
                 this.#log("Saving not implemented yet.");
-            } else if (action === MenuSceneAction.QUIT) {
-                this.gameScene = GameScene.QUIT;
-                // TODO: handle quitting
-            } else if (action === MenuSceneAction.BATTLE) {
-                this.enemyLevel += 1;
-                this.enemy = this.#loadEnemy(this.enemyLevel);
-                this.gameScene = GameScene.BATTLE_SCENE;
+            } else if (action === MenuSceneAction.RESTART) {
+                this.#initializeGame();
+                this.#log("Started a new game.");
                 this.#log(this.#printStatus(this.player, this.enemy));
+            } else if (action === MenuSceneAction.BATTLE) {
+                if (this.player.defeated) {
+                    this.#log("Player was defeated. Click Restart to start a new game.");
+                } else {
+                    this.enemyLevel += 1;
+                    this.enemy = this.#loadEnemy(this.enemyLevel);
+                    this.gameScene = GameScene.BATTLE_SCENE;
+                    this.#log(this.#printStatus(this.player, this.enemy));
+                }
             } else {
                 // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
                 console.assert(false);
@@ -307,11 +325,13 @@ class GameLogic {
                         this.#log(
                             `Player defeated after winning ${this.enemiesDefeated} battles! Game Over.`
                         );
-                        // TODO: Handle player defeated
+                        this.#log("Click Restart to start a new game.");
+                        this.gameScene = GameScene.MENU_SCENE;
+                    } else {
+                        this.player.rechargeShield(this.player.baseShieldRecharge);
+                        this.#log(`Player shield recharges by ${this.player.baseShieldRecharge} to ${this.player.shield} / ${this.player.shieldMax}`);
+                        this.#log(this.#printStatus(this.player, this.enemy));
                     }
-                    this.player.rechargeShield(this.player.baseShieldRecharge);
-                    this.#log(`Player shield recharges by ${this.player.baseShieldRecharge} to ${this.player.shield} / ${this.player.shieldMax}`);
-                    this.#log(this.#printStatus(this.player, this.enemy));
                 }
             } else if (action === BattleSceneAction.SHIELD) {
                 let recharge = this.player.focusedShieldRecharge();
@@ -322,13 +342,18 @@ class GameLogic {
                 this.#log(this.#printStatus(this.player, this.enemy));
                 if (this.player.defeated) {
                     this.#log(`Player defeated after winning ${this.enemiesDefeated} battles! Game Over.`);
-                    // TODO: Handle player defeated
+                    this.#log("Click Restart to start a new game.");
+                    this.gameScene = GameScene.MENU_SCENE;
+                } else {
+                    this.player.rechargeShield(this.player.baseShieldRecharge);
+                    this.#log(`Player shield recharges by ${this.player.baseShieldRecharge} to ${this.player.shield}/${this.player.shieldMax}`);
+                    this.#log(this.#printStatus(this.player, this.enemy));
                 }
-                this.player.rechargeShield(this.player.baseShieldRecharge);
-                this.#log(`Player shield recharges by ${this.player.baseShieldRecharge} to ${this.player.shield}/${this.player.shieldMax}`);
-                this.#log(this.#printStatus(this.player, this.enemy));
-            } else if (action === BattleSceneAction.QUIT) {
-                this.gameScene = GameScene.QUIT;
+            } else if (action === BattleSceneAction.CONCEDE) {
+                this.#log(`Conceding. Player defeated after winning ${this.enemiesDefeated} battles! Game Over.`);
+                this.#log("Click Restart to start a new game.");
+                this.player.defeated = true;
+                this.gameScene = GameScene.MENU_SCENE;
             }
         } else {
             console.assert(false);
@@ -352,10 +377,14 @@ function debug() {
         } else {
             if (input === "b") {
                 console.log(gameLogic.handleAction("MENU_SCENE", "BATTLE"));
+            } else if (input == "r") {
+                console.log(gameLogic.handleAction("MENU_SCENE", "RESTART"));
             } else if (input === "a") {
                 console.log(gameLogic.handleAction("BATTLE_SCENE", "ATTACK"));
             } else if (input === "s") {
                 console.log(gameLogic.handleAction("BATTLE_SCENE", "SHIELD"));
+            } else if (input === "c") {
+                console.log(gameLogic.handleAction("BATTLE_SCENE", "CONCEDE"));
             }
         }
     }
