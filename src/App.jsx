@@ -16,8 +16,8 @@ const RPGInterface = () => {
   const enemyHealth = 40;
   const enemyMaxHealth = 60;
 
-  const HealthBar = ({ current, max, label, color, width }) => (
-    <div className={`bg-gray-800 rounded-lg p-4 ${width}`}>
+  const HealthBar = ({ current, max, label, color}) => (
+    <div className="bg-gray-800 rounded-lg p-4">
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-gray-300">{label}</span>
         <span className="text-sm text-gray-400">{current}/{max}</span>
@@ -60,21 +60,18 @@ const RPGInterface = () => {
         </div>
 
         {/* Health Bars */}
-        {/* LEFT OFF HERE */}
-        <div className="flex w-full mb-8 space-x-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
           <HealthBar 
             current={playerHealth} 
             max={playerMaxHealth} 
             label="Player Health" 
             color="bg-green-500"
-            width="w-1/2"
           />
           <HealthBar 
             current={enemyHealth} 
             max={enemyMaxHealth} 
             label="Enemy Health" 
             color="bg-red-800"
-            width={"w-1/2"}
           />
         </div>
 
@@ -82,18 +79,17 @@ const RPGInterface = () => {
           <div className="space-y-4">
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
               <h3 className="text-sm font-medium text-gray-300 mb-4">Combat Actions</h3>
-              {/* Left off trying to get the wrap to work right or find some other way to make this part responsive */}
-              <div className="flex flex-wrap space-x-4">
-                <button className="w-1/2 lg:w-1/4 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ">
+                <button className="bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Attack
                 </button>
-                <button className="w-1/2 lg:w-1/4 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                <button className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Defend
                 </button>
-                <button className="w-1/2 lg:w-1/4 bg-emerald-800 hover:bg-emerald-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                <button className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Use Item
                 </button>
-                <button className="w-1/2 lg:w-1/4 bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Special
                 </button>
               </div>
