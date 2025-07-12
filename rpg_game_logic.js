@@ -366,12 +366,10 @@ class GameLogic {
 
 
 function debug() {
-    gameLogic = new GameLogic((message) => {
-        console.log(message);
-    });
+    let gameLogic = new GameLogic(console.log);
 
     while (true) {
-        input = prompt();
+        let input = prompt();
         if (input === "q") {
             break;
         } else {
