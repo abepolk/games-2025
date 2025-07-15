@@ -62,20 +62,22 @@ const RPGInterface = () => {
         </div>
 
         {/* Health Bars */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
-          <HealthBar 
-            current={playerHealth} 
-            max={playerMaxHealth} 
-            label="Player Health" 
-            color="bg-green-500"
-          />
-          <HealthBar 
-            current={enemyHealth} 
-            max={enemyMaxHealth} 
-            label="Enemy Health" 
-            color="bg-red-800"
-          />
-        </div>
+        {!menu && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
+            <HealthBar 
+              current={playerHealth} 
+              max={playerMaxHealth} 
+              label="Player Health" 
+              color="bg-green-500"
+            />
+            <HealthBar 
+              current={enemyHealth} 
+              max={enemyMaxHealth} 
+              label="Enemy Health" 
+              color="bg-red-800"
+            />
+          </div>
+        )}
 
           {/* Command Buttons */}
           <div className="space-y-4">
