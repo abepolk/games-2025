@@ -16,6 +16,8 @@ const RPGInterface = () => {
   const enemyHealth = 40;
   const enemyMaxHealth = 60;
 
+  const [menu, setMenu] = useState(true);
+
   const HealthBar = ({ current, max, label, color}) => (
     <div className="bg-gray-800 rounded-lg p-4">
       <div className="flex justify-between items-center mb-2">
@@ -78,20 +80,33 @@ const RPGInterface = () => {
           {/* Command Buttons */}
           <div className="space-y-4">
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">Combat Actions</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ">
-                <button className="bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                  Attack
-                </button>
-                <button className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                  Defend
-                </button>
-                <button className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+              <h3 className="text-sm font-medium text-gray-300 mb-4">{!menu ? 'Combat Actions' : 'Game Options'}</h3>
+              <div className="md:grid md:grid-cols-2 gap-4 ">
+              {!menu ? (
+                <>
+                  <button className="bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                    Attack
+                  </button>
+                  <button className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                    Defend
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                    Battle
+                  </button>
+                  <button className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                    Restart
+                  </button>
+                </>
+              )}
+                {/* <button className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Use Item
                 </button>
                 <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Special
-                </button>
+                </button> */}
               </div>
             </div>
 
