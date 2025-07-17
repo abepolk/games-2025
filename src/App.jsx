@@ -15,7 +15,6 @@ const RPGInterface = () => {
 
   const playerShieldMax = 100;
   const playerBaseShieldRecharge = 2;
-
   const enemyShieldMax = 20;
 
   const GameScene = Object.freeze({
@@ -35,163 +34,177 @@ const RPGInterface = () => {
     CONCEDE: "CONCEDE"
   });
 
-  const [playerShield, setPlayerShield] = useState(10);
-  const [playerDefeated, setPlayerDefeated] = useState(false);
-  const [playerWeapon, setPlayerWeapon] = useState({
-    baseDamage: 3,
-    bonusDamageMin: 0,
-    bonusDamageMax: 2
-  });
 
-  const [enemyWeapon, setEnemyWeapon] = useState(null);
-  const [enemyShield, setEnemyShield] = useState(null);
-  const [enemyDefeated, setEnemyDefeated] = useState(null);
+  const [gameState, setGameState] = useState(
+    {
+      player: {
+        shield: 10,
+        defeated: false,
+        weapon: {
+          baseDamage: 3,
+          bonusDamageMin: 0,
+          bonusDamageMax: 2
+        }
+      },
+      enemy: null,
+      enemiesDefeated: 0,
+      gameScene: GameScene.MENU_SCENE,
+    }
+  );
 
-  const [enemyLevel, setEnemyLevel] = useState(0);
-  const [enemiesDefeated, setEnemiesDefeated] = useState(0);
-  const [gameScene, setGameScene] = useState(GameScene.MENU_SCENE);
+  const cloneState = (oldGameState) => {
+    let newEnemy = null
+    if (oldGameState.enemy !== null) {
+      newEnemy = {
+        ...oldGameState.enemy,
+        weapon: {
+          ...oldGameState.enemy.weapon
+        }
+      }
+    }
+    return {
+      ...oldGameState,
+      player: {
+        ...oldGameState.player,
+        weapon: {
+          ...oldGameState.player.weapon
+        }
+      },
+      enemy: newEnemy,
+    }
+  }
 
   const weaponAttackDamage = (weapon) => {
     return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
   };
 
-  const clearEnemy = () => {
-    setEnemyWeapon(null);
-    setEnemyShield(null);
-    setEnemyDefeated(null);
-    setEnemyLevel(0);
-  };
-
-  const populateEnemy = (level) => {
-    setEnemyLevel(level);
-    setEnemyWeapon({
-      baseDamage: level,
-      bonusDamageMin: 1 + Math.floor(level / 10),
-      bonusDamageMax: 2 + Math.floor(level / 5),
-    });
-    setEnemyShield(10);
-    setEnemyDefeated(false);
-  };
-
-  const applyEnemyDamage = (amount) => {
-    if (amount > enemyShield) {
-      setEnemyDefeated(true);
-      setEnemyShield(0);
-    } else {
-      setEnemyShield(enemyShield - amount);
-      console.assert(enemyShield >= 0);
+  const createEnemy = (level) => {
+    return {
+      level: level,
+      weapon: {
+        baseDamage: level,
+        bonusDamageMin: 1 + Math.floor(level / 10),
+        bonusDamageMax: 2 + Math.floor(level / 5),
+      },
+      shield: 10,
+      defeated: false
     }
   };
 
-  const applyPlayerDamage = (amount) => {
-    if (amount > playerShield) {
-      setPlayerDefeated(true);
-      setPlayerShield(0);
+  const applyEnemyDamage = (localState, amount) => {
+    if (amount > localState.enemy.shield) {
+      localState.enemy.defeated = true;
+      localState.enemy.shield = 0;
     } else {
-      console.log(`Amount: ${amount}`);
-      let newShieldAmount = playerShield - amount;
-      console.log(`New shield amount: ${newShieldAmount}`);
-      setPlayerShield(newShieldAmount);
-      console.assert(playerShield >= 0);
-      console.log(`New player shield: ${playerShield}`);
+      localState.enemy.shield = localState.enemy.shield - amount;
+      console.assert(localState.enemy.shield >= 0);
     }
   };
 
-  const rechargePlayerShield = (amount) => {
-    setPlayerShield(Math.min(playerShieldMax, playerShield + amount));
+  const applyPlayerDamage = (localState, amount) => {
+    if (amount > localState.player.shield) {
+      localState.player.defeated = true
+      localState.player.shield = 0;
+    } else {
+      let newShieldAmount = localState.player.shield - amount;
+      localState.player.shield = newShieldAmount;
+      console.assert(localState.player.shield >= 0);
+    }
+  };
+
+  const rechargePlayerShield = (localState, amount) => {
+    localState.player.shield = Math.min(playerShieldMax, localState.player.shield + amount);
   };
 
   // TODO: replace this with a function that updates the text log in the UI
   const log = console.log;
 
-  const printStatus = () => {
-    let result = `Player Shield: ${playerShield}/${playerShieldMax}\n`;
-    if (enemyShield === null) {
+  const printStatus = (localState) => {
+    let result = `Player Shield: ${localState.player.shield}/${playerShieldMax}\n`;
+    if (localState.enemy === null) {
       result += "Enemy Shield: N/A\n";
     } else {
-      result += `Enemy Shield: ${enemyShield}/${enemyShieldMax}\n`;
+      result += `Enemy Shield: ${localState.enemy.shield}/${enemyShieldMax}\n`;
     }
     log(result);
   };
 
-  const enemyAttack = () => {
-    let enemyDamage = weaponAttackDamage(enemyWeapon);
-    console.log(`Enemy Damage: ${enemyDamage}`);
-    applyPlayerDamage(enemyDamage);
+  const enemyAttack = (localState) => {
+    let enemyDamage = weaponAttackDamage(localState.enemy.weapon);
+    applyPlayerDamage(localState, enemyDamage);
     log(`Enemy attacks for ${enemyDamage} damage!`);
-    printStatus();
-    console.log("Printed Status...");
-    console.log(playerShield);
-    if (playerDefeated) {
-      log(`Player defeated after winning ${this.enemiesDefeated} battles! Game Over.`);
+    printStatus(localState);
+    if (localState.player.defeated) {
+      log(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
       log("Click Restart to start a new game.");
-      setGameScene(GameScene.MENU_SCENE);
+      localState.gameScene = GameScene.MENU_SCENE;
     } else {
-      rechargePlayerShield(playerBaseShieldRecharge);
-      log(`Player shield recharges by ${playerBaseShieldRecharge} to ${playerShield}/${playerShieldMax}`);
-      printStatus();
+      rechargePlayerShield(localState, playerBaseShieldRecharge);
+      log(`Player shield recharges by ${playerBaseShieldRecharge} to ${localState.player.shield}/${playerShieldMax}`);
+      printStatus(localState);
     }
   };
 
   const handleAction = (action) => {
-    console.log(action);
-    if (gameScene === GameScene.MENU_SCENE) {
+    let localState = cloneState(gameState);
+    if (localState.gameScene === GameScene.MENU_SCENE) {
       if (action === MenuSceneAction.SAVE) {
         console.log("Saving not implemented yet.");
       } else if (action === MenuSceneAction.RESTART) {
-        setPlayerShield(10);
-        setPlayerDefeated(false);
-        clearEnemy();
-        setEnemiesDefeated(0);
-        setGameScene(GameScene.MENU_SCENE);
+        localState.player.shield = 10;
+        localState.player.defeated = false;
+        localState.enemy = null;
+        localState.enemiesDefeated = 0;
+        localState.gameScene = GameScene.MENU_SCENE;
         log("Started a new game.");
-        printStatus();
+        printStatus(localState);
       } else if (action === MenuSceneAction.BATTLE) {
-        if (playerDefeated) {
+        if (localState.player.defeated) {
           log("Player was defeated. Click Restart to start a new game.");
         } else {
-          populateEnemy(enemyLevel + 1);
-          setGameScene(GameScene.BATTLE_SCENE);
-          printStatus();
+          localState.enemy = createEnemy(localState.enemy === null ? 1 : localState.enemy.level + 1);
+          localState.gameScene = GameScene.BATTLE_SCENE;
+          printStatus(localState);
         }
       } else {
         // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
         console.assert(false);
         log(`Unknown command ${action}`);
       }
-    } else if (gameScene === GameScene.BATTLE_SCENE) {
+    } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
       if (action === BattleSceneAction.ATTACK) {
-        let damage = weaponAttackDamage(playerWeapon);
-        applyEnemyDamage(damage);
+        let damage = weaponAttackDamage(localState.player.weapon);
+        applyEnemyDamage(localState, damage);
         log(`Player attacks for ${damage} damage!`);
-        if (enemyDefeated) {
-          printStatus();
+        if (localState.enemy.defeated) {
+          printStatus(localState);
           log("Enemy defeated!");
-          setEnemiesDefeated(enemiesDefeated + 1);
-          let rechargeBonus = 5 + Math.floor(enemyLevel / 5);
-          rechargePlayerShield(rechargeBonus);
+          localState.enemiesDefeated = localState.enemiesDefeated + 1;
+          let rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
+          rechargePlayerShield(localState, rechargeBonus);
           log(
-            `Shield recharged by ${rechargeBonus} to ${playerShield}/${playerShieldMax}`
+            `Shield recharged by ${rechargeBonus} to ${localState.player.shield}/${playerShieldMax}`
           );
-          setGameScene(GameScene.MENU_SCENE);
+          localState.gameScene = GameScene.MENU_SCENE;
         } else {
-          enemyAttack();
+          enemyAttack(localState);
         }
       } else if (action === BattleSceneAction.SHIELD) {
-        let recharge = this.player.focusedShieldRecharge();
-        this.player.rechargeShield(recharge);
-        log(`Focusing the shield recharges by ${recharge} to ${playerShield}/${playerShieldMax}`);
-        enemyAttack();
+        let recharge = playerBaseShieldRecharge * 3;
+        rechargePlayerShield(localState, recharge);
+        log(`Focusing the shield recharges by ${recharge} to ${localState.player.shield}/${playerShieldMax}`);
+        enemyAttack(localState);
       } else if (action === BattleSceneAction.CONCEDE) {
-        log(`Conceding. Player defeated after winning ${enemiesDefeated} battles! Game Over.`);
+        log(`Conceding. Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
         log("Click Restart to start a new game.");
-        setPlayerDefeated(true);
-        setGameScene(GameScene.MENU_SCENE);
+        localState.player.defeated = true;
+        localState.gameScene = GameScene.MENU_SCENE;
       }
     } else {
       console.assert(false);
-      log(`Unknown scene ${gameScene}`);
+      log(`Unknown scene ${localState.gameScene}`);
     }
+    setGameState(localState);
   };
 
 
@@ -241,13 +254,13 @@ const RPGInterface = () => {
         {/* Health Bars */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
           <HealthBar
-            current={playerShield}
+            current={gameState.player.shield}
             max={playerShieldMax}
             label="Player Shield"
             color="bg-green-500"
           />
           <HealthBar
-            current={enemyShield}
+            current={gameState.enemy === null ? "N/A" : gameState.enemy.shield}
             max={enemyShieldMax}
             label="Enemy Shield"
             color="bg-red-800"
@@ -264,7 +277,7 @@ const RPGInterface = () => {
                 Attack
               </button>
               {/* <button className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" > */}
-              <button className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction("SHIELD") }} >
+              <button className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.SHIELD) }} >
                 Shield
               </button>
               {/* <button className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" > */}
@@ -272,7 +285,7 @@ const RPGInterface = () => {
                 Battle
               </button>
               {/* <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" > */}
-              <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction("RESTART") }}>
+              <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.RESTART) }}>
                 Restart
               </button>
             </div>
