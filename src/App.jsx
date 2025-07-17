@@ -16,8 +16,6 @@ const RPGInterface = () => {
   const playerShieldMax = 100;
   const playerBaseShieldRecharge = 2;
 
-  const [menu, setMenu] = useState(true);
-
   const enemyShieldMax = 20;
 
   const GameScene = Object.freeze({
@@ -254,17 +252,17 @@ const RPGInterface = () => {
         </div>
 
         {/* Health Bars */}
-        {!menu && (
+        {!(gameState.gameScene === GameScene.MENU_SCENE) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
             <HealthBar
-              current={playerHealth}
-              max={playerMaxHealth}
+              current={gameState.player.shield}
+              max={playerShieldMax}
               label="Player Health"
               color="bg-green-500"
             />
             <HealthBar
-              current={enemyHealth}
-              max={enemyMaxHealth}
+              current={gameState.enemy === null ? 0 : gameState.enemy.shield}
+              max={enemyShieldMax}
               label="Enemy Health"
               color="bg-red-800"
             />
@@ -274,9 +272,9 @@ const RPGInterface = () => {
         {/* Command Buttons */}
         <div className="space-y-4">
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-            <h3 className="text-sm font-medium text-gray-300 mb-4">{!menu ? 'Combat Actions' : 'Game Options'}</h3>
+            <h3 className="text-sm font-medium text-gray-300 mb-4">{!(gameState.gameScene === GameScene.MENU_SCENE) ? 'Combat Actions' : 'Game Options'}</h3>
             <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
-              {!menu ? (
+              {!(gameState.gameScene === GameScene.MENU_SCENE) ? (
                 <>
                   <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK); }}>
                     Attack
