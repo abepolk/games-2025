@@ -124,8 +124,8 @@ const RPGInterface = () => {
     }
   };
 
-  const handleAction = (action) => {
-    const localState = structuredClone(gameState);
+  const handleAction = (prevState, action) => {
+    const localState = structuredClone(prevState);
     if (localState.gameScene === GameScene.MENU_SCENE) {
       if (action === MenuSceneAction.SAVE) {
         console.log("Saving not implemented yet.");
@@ -183,7 +183,7 @@ const RPGInterface = () => {
       console.assert(false);
       log(`Unknown scene ${localState.gameScene}`);
     }
-    setGameState(localState);
+    return localState;
   };
 
   const HealthBar = ({ current, max, label, color }) => (
@@ -254,19 +254,19 @@ const RPGInterface = () => {
             <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
               {!(gameState.gameScene === GameScene.MENU_SCENE) ? (
                 <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, BattleSceneAction.ATTACK))); }}>
                     Attack
                   </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.SHIELD); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, BattleSceneAction.SHIELD))); }}>
                     Defend
                   </button>
                 </>
               ) : (
                 <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.BATTLE); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, MenuSceneAction.BATTLE))); }}>
                     Battle
                   </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.RESTART); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, MenuSceneAction.RESTART))); }}>
                     Restart
                   </button>
                 </>
