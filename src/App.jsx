@@ -53,28 +53,6 @@ const RPGInterface = () => {
     }
   );
 
-  const cloneState = (oldGameState) => {
-    let newEnemy = null
-    if (oldGameState.enemy !== null) {
-      newEnemy = {
-        ...oldGameState.enemy,
-        weapon: {
-          ...oldGameState.enemy.weapon
-        }
-      }
-    }
-    return {
-      ...oldGameState,
-      player: {
-        ...oldGameState.player,
-        weapon: {
-          ...oldGameState.player.weapon
-        }
-      },
-      enemy: newEnemy,
-    }
-  }
-
   const weaponAttackDamage = (weapon) => {
     return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
   };
@@ -107,7 +85,7 @@ const RPGInterface = () => {
       localState.player.defeated = true
       localState.player.shield = 0;
     } else {
-      let newShieldAmount = localState.player.shield - amount;
+      const newShieldAmount = localState.player.shield - amount;
       localState.player.shield = newShieldAmount;
       console.assert(localState.player.shield >= 0);
     }
@@ -131,7 +109,7 @@ const RPGInterface = () => {
   };
 
   const enemyAttack = (localState) => {
-    let enemyDamage = weaponAttackDamage(localState.enemy.weapon);
+    const enemyDamage = weaponAttackDamage(localState.enemy.weapon);
     applyPlayerDamage(localState, enemyDamage);
     log(`Enemy attacks for ${enemyDamage} damage!`);
     printStatus(localState);
@@ -147,7 +125,7 @@ const RPGInterface = () => {
   };
 
   const handleAction = (action) => {
-    let localState = cloneState(gameState);
+    const localState = structuredClone(gameState);
     if (localState.gameScene === GameScene.MENU_SCENE) {
       if (action === MenuSceneAction.SAVE) {
         console.log("Saving not implemented yet.");
@@ -174,14 +152,14 @@ const RPGInterface = () => {
       }
     } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
       if (action === BattleSceneAction.ATTACK) {
-        let damage = weaponAttackDamage(localState.player.weapon);
+        const damage = weaponAttackDamage(localState.player.weapon);
         applyEnemyDamage(localState, damage);
         log(`Player attacks for ${damage} damage!`);
         if (localState.enemy.defeated) {
           printStatus(localState);
           log("Enemy defeated!");
           localState.enemiesDefeated = localState.enemiesDefeated + 1;
-          let rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
+          const rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
           rechargePlayerShield(localState, rechargeBonus);
           log(
             `Shield recharged by ${rechargeBonus} to ${localState.player.shield}/${playerShieldMax}`
@@ -191,7 +169,7 @@ const RPGInterface = () => {
           enemyAttack(localState);
         }
       } else if (action === BattleSceneAction.SHIELD) {
-        let recharge = playerBaseShieldRecharge * 3;
+        const recharge = playerBaseShieldRecharge * 3;
         rechargePlayerShield(localState, recharge);
         log(`Focusing the shield recharges by ${recharge} to ${localState.player.shield}/${playerShieldMax}`);
         enemyAttack(localState);
