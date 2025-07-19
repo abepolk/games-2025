@@ -1,15 +1,13 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './App.css'
 
 const RPGInterface = () => {
-  // Sample messages for the console
-  const messages = [
-    "You enter a dark cavern. The air is thick with moisture.",
-    "A goblin emerges from the shadows, snarling menacingly.",
-    "The goblin attacks with a rusty dagger!",
-    "You dodge the attack and counter with your sword.",
-    "The goblin takes 15 damage and staggers backward."
-  ];
+  const [messages, setMessages] = useState([
+    "This is where all the messages appear.",
+    "These messages are super engaging and interesting, I promise."
+  ]);
+
+  const messagesBottom = useRef(null);
 
   const playerHealth = 85;
   const playerMaxHealth = 100;
@@ -17,6 +15,11 @@ const RPGInterface = () => {
   const enemyMaxHealth = 60;
 
   const [menu, setMenu] = useState(true);
+
+  const log = (message) => {
+    setMessages(messages => [...messages, message]);
+    messagesBottom.current.scrollIntoView();
+  };
 
   const HealthBar = ({ current, max, label, color}) => (
     <div className="bg-gray-800 rounded-lg p-4">
@@ -41,12 +44,11 @@ const RPGInterface = () => {
 
         {/* Main Game Area */}
         {/* Console/Messages Area */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 h-96 overflow-hidden mb-8">
+        <div className="bg-gray-800 rounded-lg border border-gray-700 mb-8">
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
-          <div className="p-4 h-full overflow-y-auto">
-            <div className="space-y-3">
+          <div className="p-4 h-96 overflow-scroll space-y-3">
               {messages.map((message, index) => (
                 <div 
                   key={index} 
@@ -57,7 +59,7 @@ const RPGInterface = () => {
                   {message}
                 </div>
               ))}
-            </div>
+              <div ref={messagesBottom}></div>
           </div>
         </div>
 
@@ -86,19 +88,31 @@ const RPGInterface = () => {
               <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
               {!menu ? (
                 <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                  <button
+                    className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                    onClick={() => log("You're attacking!")}
+                  >
                     Attack
                   </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                  <button
+                    className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                    onClick={() => log("You're shielding!")}
+                  >
                     Defend
                   </button>
                 </>
               ) : (
                 <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                  <button
+                    className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                    onClick={() => log("This world ain't big enough for the both of us!")}
+                  >
                     Battle
                   </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                  <button
+                    className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                    onClick={() => log("Just one more time, I'll stop soon…")}
+                  >
                     Restart
                   </button>
                 </>
