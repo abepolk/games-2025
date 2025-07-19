@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 
 const RPGInterface = () => {
@@ -16,19 +16,24 @@ const RPGInterface = () => {
 
   const [menu, setMenu] = useState(true);
 
+  useEffect(() => {
+    if (messagesBottom.current) {
+      messagesBottom.current.scrollIntoView();
+    }
+  }, [messages]);
+
   const log = (message) => {
     setMessages(messages => [...messages, message]);
-    messagesBottom.current.scrollIntoView();
   };
 
-  const HealthBar = ({ current, max, label, color}) => (
+  const HealthBar = ({ current, max, label, color }) => (
     <div className="bg-gray-800 rounded-lg p-4">
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-gray-300">{label}</span>
         <span className="text-sm text-gray-400">{current}/{max}</span>
       </div>
       <div className="w-full bg-gray-700 rounded-full h-3">
-        <div 
+        <div
           className={`h-3 rounded-full transition-all duration-300 ${color}`}
           style={{ width: `${(current / max) * 100}%` }}
         />
@@ -48,44 +53,44 @@ const RPGInterface = () => {
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
-          <div className="p-4 h-96 overflow-scroll space-y-3">
-              {messages.map((message, index) => (
-                <div 
-                  key={index} 
-                  className="text-gray-300 leading-relaxed"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <span className="text-blue-400 text-sm mr-2">▶</span>
-                  {message}
-                </div>
-              ))}
-              <div ref={messagesBottom}></div>
+          <div className="p-4 h-96 overflow-y-scroll space-y-3">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className="text-gray-300 leading-relaxed"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <span className="text-blue-400 text-sm mr-2">▶</span>
+                {message}
+              </div>
+            ))}
+            <div ref={messagesBottom}></div>
           </div>
         </div>
 
         {/* Health Bars */}
         {!menu && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
-            <HealthBar 
-              current={playerHealth} 
-              max={playerMaxHealth} 
-              label="Player Health" 
+            <HealthBar
+              current={playerHealth}
+              max={playerMaxHealth}
+              label="Player Health"
               color="bg-green-500"
             />
-            <HealthBar 
-              current={enemyHealth} 
-              max={enemyMaxHealth} 
-              label="Enemy Health" 
+            <HealthBar
+              current={enemyHealth}
+              max={enemyMaxHealth}
+              label="Enemy Health"
               color="bg-red-800"
             />
           </div>
         )}
 
-          {/* Command Buttons */}
-          <div className="space-y-4">
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">{!menu ? 'Combat Actions' : 'Game Options'}</h3>
-              <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
+        {/* Command Buttons */}
+        <div className="space-y-4">
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+            <h3 className="text-sm font-medium text-gray-300 mb-4">{!menu ? 'Combat Actions' : 'Game Options'}</h3>
+            <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
               {!menu ? (
                 <>
                   <button
@@ -117,16 +122,16 @@ const RPGInterface = () => {
                   </button>
                 </>
               )}
-                {/* <button className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+              {/* <button className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Use Item
                 </button>
                 <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Special
                 </button> */}
-              </div>
             </div>
+          </div>
 
-            {/* <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+          {/* <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
               <h3 className="text-sm font-medium text-gray-300 mb-4">General Actions</h3>
               <div className="space-y-2">
                 <button className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
@@ -140,7 +145,7 @@ const RPGInterface = () => {
                 </button>
               </div>
             </div> */}
-          </div>
+        </div>
       </div>
 
       {/* <style jsx>{` */}
