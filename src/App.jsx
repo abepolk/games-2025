@@ -1,17 +1,15 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 
 
 
 const RPGInterface = () => {
-  // Sample messages for the console
-  const messages = [
-    "You enter a dark cavern. The air is thick with moisture.",
-    "A goblin emerges from the shadows, snarling menacingly.",
-    "The goblin attacks with a rusty dagger!",
-    "You dodge the attack and counter with your sword.",
-    "The goblin takes 15 damage and staggers backward."
-  ];
+  const [messages, setMessages] = useState([
+    "This is where all the messages appear.",
+    "These messages are super engaging and interesting, I promise."
+  ]);
+
+  const messagesBottom = useRef(null);
 
   const playerShieldMax = 100;
   const playerBaseShieldRecharge = 2;
@@ -95,8 +93,15 @@ const RPGInterface = () => {
     localState.player.shield = Math.min(playerShieldMax, localState.player.shield + amount);
   };
 
-  // TODO: replace this with a function that updates the text log in the UI
-  const log = console.log;
+  useEffect(() => {
+    if (messagesBottom.current) {
+      messagesBottom.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  const log = (message) => {
+    setMessages(messages => [...messages, message]);
+  };
 
   const printStatus = (localState) => {
     let result = `Player Shield: ${localState.player.shield}/${playerShieldMax}\n`;
@@ -209,43 +214,44 @@ const RPGInterface = () => {
 
         {/* Main Game Area */}
         {/* Console/Messages Area */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 h-96 overflow-hidden mb-8">
+        <div className="bg-gray-800 rounded-lg border border-gray-700 mb-8">
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
-          <div className="p-4 h-full overflow-y-auto">
-            <div className="space-y-3">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className="text-gray-300 leading-relaxed"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <span className="text-blue-400 text-sm mr-2">▶</span>
-                  {message}
-                </div>
-              ))}
-            </div>
+          <div className="p-4 h-96 overflow-y-scroll space-y-3">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className="text-gray-300 leading-relaxed"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <span className="text-blue-400 text-sm mr-2">▶</span>
+                {message}
+              </div>
+            ))}
+            <div ref={messagesBottom}></div>
           </div>
         </div>
 
         {/* Health Bars */}
-        {!(gameState.gameScene === GameScene.MENU_SCENE) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
-            <HealthBar
-              current={gameState.player.shield}
-              max={playerShieldMax}
-              label="Player Health"
-              color="bg-green-500"
-            />
-            <HealthBar
-              current={gameState.enemy === null ? 0 : gameState.enemy.shield}
-              max={enemyShieldMax}
-              label="Enemy Health"
-              color="bg-red-800"
-            />
-          </div>
-        )}
+        {
+          !(gameState.gameScene === GameScene.MENU_SCENE) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
+              <HealthBar
+                current={gameState.player.shield}
+                max={playerShieldMax}
+                label="Player Health"
+                color="bg-green-500"
+              />
+              <HealthBar
+                current={gameState.enemy === null ? 0 : gameState.enemy.shield}
+                max={enemyShieldMax}
+                label="Enemy Health"
+                color="bg-red-800"
+              />
+            </div>
+          )
+        }
 
         {/* Command Buttons */}
         <div className="space-y-4">
@@ -277,8 +283,8 @@ const RPGInterface = () => {
                 <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                   Special
                 </button> */}
-            </div>
-          </div>
+            </div >
+          </div >
 
           {/* <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
               <h3 className="text-sm font-medium text-gray-300 mb-4">General Actions</h3>
@@ -294,8 +300,8 @@ const RPGInterface = () => {
                 </button>
               </div>
             </div> */}
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* <style jsx>{` */}
       {/* <style>
@@ -307,7 +313,7 @@ const RPGInterface = () => {
           animation: fade-in 0.3s ease-out forwards;
         }
       </style> */}
-    </div>
+    </div >
   );
 };
 
