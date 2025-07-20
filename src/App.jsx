@@ -57,7 +57,7 @@ const RPGInterface = () => {
 
   const createEnemy = (level) => {
     return {
-      level: level,
+      level,
       weapon: {
         baseDamage: level,
         bonusDamageMin: 1 + Math.floor(level / 10),
@@ -69,23 +69,23 @@ const RPGInterface = () => {
   };
 
   const applyEnemyDamage = (localState, amount) => {
-    if (amount > localState.enemy.shield) {
+    if (amount >= localState.enemy.shield) {
       localState.enemy.defeated = true;
       localState.enemy.shield = 0;
     } else {
       localState.enemy.shield = localState.enemy.shield - amount;
-      console.assert(localState.enemy.shield >= 0);
+      console.assert(localState.enemy.shield > 0);
     }
   };
 
   const applyPlayerDamage = (localState, amount) => {
-    if (amount > localState.player.shield) {
+    if (amount >= localState.player.shield) {
       localState.player.defeated = true
       localState.player.shield = 0;
     } else {
       const newShieldAmount = localState.player.shield - amount;
       localState.player.shield = newShieldAmount;
-      console.assert(localState.player.shield >= 0);
+      console.assert(localState.player.shield > 0);
     }
   };
 
@@ -129,66 +129,68 @@ const RPGInterface = () => {
     }
   };
 
-  const handleAction = (prevState, action) => {
-    const localState = structuredClone(prevState);
-    if (localState.gameScene === GameScene.MENU_SCENE) {
-      if (action === MenuSceneAction.SAVE) {
-        console.log("Saving not implemented yet.");
-      } else if (action === MenuSceneAction.RESTART) {
-        localState.player.shield = 10;
-        localState.player.defeated = false;
-        localState.enemy = null;
-        localState.enemiesDefeated = 0;
-        localState.gameScene = GameScene.MENU_SCENE;
-        log("Started a new game.");
-        printStatus(localState);
-      } else if (action === MenuSceneAction.BATTLE) {
-        if (localState.player.defeated) {
-          log("Player was defeated. Click Restart to start a new game.");
-        } else {
-          localState.enemy = createEnemy(localState.enemy === null ? 1 : localState.enemy.level + 1);
-          localState.gameScene = GameScene.BATTLE_SCENE;
+  const handleAction = (action) => {
+    setGameState((prevState) => {
+      const localState = structuredClone(prevState);
+      if (localState.gameScene === GameScene.MENU_SCENE) {
+        if (action === MenuSceneAction.SAVE) {
+          console.log("Saving not implemented yet.");
+        } else if (action === MenuSceneAction.RESTART) {
+          localState.player.shield = 10;
+          localState.player.defeated = false;
+          localState.enemy = null;
+          localState.enemiesDefeated = 0;
+          localState.gameScene = GameScene.MENU_SCENE;
+          log("Started a new game.");
           printStatus(localState);
+        } else if (action === MenuSceneAction.BATTLE) {
+          if (localState.player.defeated) {
+            log("Player was defeated. Click Restart to start a new game.");
+          } else {
+            localState.enemy = createEnemy(localState.enemy === null ? 1 : localState.enemy.level + 1);
+            localState.gameScene = GameScene.BATTLE_SCENE;
+            printStatus(localState);
+          }
+        } else {
+          // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
+          console.assert(false);
+          log(`Unknown command ${action}`);
+        }
+      } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
+        if (action === BattleSceneAction.ATTACK) {
+          const damage = weaponAttackDamage(localState.player.weapon);
+          applyEnemyDamage(localState, damage);
+          log(`Player attacks for ${damage} damage!`);
+          if (localState.enemy.defeated) {
+            printStatus(localState);
+            log("Enemy defeated!");
+            localState.enemiesDefeated = localState.enemiesDefeated + 1;
+            const rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
+            rechargePlayerShield(localState, rechargeBonus);
+            log(
+              `Shield recharged by ${rechargeBonus} to ${localState.player.shield}/${playerShieldMax}`
+            );
+            localState.gameScene = GameScene.MENU_SCENE;
+          } else {
+            enemyAttack(localState);
+          }
+        } else if (action === BattleSceneAction.SHIELD) {
+          const recharge = playerBaseShieldRecharge * 3;
+          rechargePlayerShield(localState, recharge);
+          log(`Focusing the shield recharges by ${recharge} to ${localState.player.shield}/${playerShieldMax}`);
+          enemyAttack(localState);
+        } else if (action === BattleSceneAction.CONCEDE) {
+          log(`Conceding. Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
+          log("Click Restart to start a new game.");
+          localState.player.defeated = true;
+          localState.gameScene = GameScene.MENU_SCENE;
         }
       } else {
-        // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
         console.assert(false);
-        log(`Unknown command ${action}`);
+        log(`Unknown scene ${localState.gameScene}`);
       }
-    } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
-      if (action === BattleSceneAction.ATTACK) {
-        const damage = weaponAttackDamage(localState.player.weapon);
-        applyEnemyDamage(localState, damage);
-        log(`Player attacks for ${damage} damage!`);
-        if (localState.enemy.defeated) {
-          printStatus(localState);
-          log("Enemy defeated!");
-          localState.enemiesDefeated = localState.enemiesDefeated + 1;
-          const rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
-          rechargePlayerShield(localState, rechargeBonus);
-          log(
-            `Shield recharged by ${rechargeBonus} to ${localState.player.shield}/${playerShieldMax}`
-          );
-          localState.gameScene = GameScene.MENU_SCENE;
-        } else {
-          enemyAttack(localState);
-        }
-      } else if (action === BattleSceneAction.SHIELD) {
-        const recharge = playerBaseShieldRecharge * 3;
-        rechargePlayerShield(localState, recharge);
-        log(`Focusing the shield recharges by ${recharge} to ${localState.player.shield}/${playerShieldMax}`);
-        enemyAttack(localState);
-      } else if (action === BattleSceneAction.CONCEDE) {
-        log(`Conceding. Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-        log("Click Restart to start a new game.");
-        localState.player.defeated = true;
-        localState.gameScene = GameScene.MENU_SCENE;
-      }
-    } else {
-      console.assert(false);
-      log(`Unknown scene ${localState.gameScene}`);
-    }
-    return localState;
+      return localState;
+    });
   };
 
   const HealthBar = ({ current, max, label, color }) => (
@@ -235,7 +237,7 @@ const RPGInterface = () => {
 
         {/* Health Bars */}
         {
-          !(gameState.gameScene === GameScene.MENU_SCENE) && (
+          gameState.gameScene === GameScene.BATTLE_SCENE && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
               <HealthBar
                 current={gameState.player.shield}
@@ -258,21 +260,21 @@ const RPGInterface = () => {
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
             <h3 className="text-sm font-medium text-gray-300 mb-4">{!(gameState.gameScene === GameScene.MENU_SCENE) ? 'Combat Actions' : 'Game Options'}</h3>
             <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
-              {!(gameState.gameScene === GameScene.MENU_SCENE) ? (
+              {gameState.gameScene === GameScene.BATTLE_SCENE ? (
                 <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, BattleSceneAction.ATTACK))); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK); }}>
                     Attack
                   </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, BattleSceneAction.SHIELD))); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.SHIELD); }}>
                     Defend
                   </button>
                 </>
               ) : (
                 <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, MenuSceneAction.BATTLE))); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.BATTLE); }}>
                     Battle
                   </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { setGameState(prevState => (handleAction(prevState, MenuSceneAction.RESTART))); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.RESTART); }}>
                     Restart
                   </button>
                 </>
