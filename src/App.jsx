@@ -191,11 +191,13 @@ const RPGInterface = () => {
         } else {
           throw `Unknown scene ${localState.gameScene}`;
         }
+        return localState;
       } catch (error) {
         console.error(error);
         log(error);
+        // Leave state unchanged if there's an error
+        return structuredClone(prevState);
       }
-      return localState;
     });
   };
 
