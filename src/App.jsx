@@ -193,8 +193,8 @@ const RPGInterface = () => {
     });
   };
 
-  const HealthBar = ({ current, max, label, color }) => (
-    <div className="bg-gray-800 rounded-lg p-4">
+  const HealthBar = ({ current, max, label, color, order }) => (
+    <div className={`bg-gray-800 rounded-lg p-4 ${order}`} >
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-gray-300">{label}</span>
         <span className="text-sm text-gray-400">{current}/{max}</span>
@@ -205,8 +205,14 @@ const RPGInterface = () => {
           style={{ width: `${(current / max) * 100}%` }}
         />
       </div>
-    </div>
+    </div >
   );
+
+  const StatusDisplay = ({ order }) => (
+    <div className={`bg-gray-800 rounded-lg p-4 ${order}`} >
+      <h2 className="text-sm font-medium text-gray-300">Enemies Defeated: 5</h2>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -238,18 +244,30 @@ const RPGInterface = () => {
         {/* Health Bars */}
         {
           gameState.gameScene === GameScene.BATTLE_SCENE && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
+            <div className="grid grid-cols-1 grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-4 mb-8 space-x">
               <HealthBar
                 current={gameState.player.shield}
                 max={playerShieldMax}
                 label="Player Health"
                 color="bg-green-500"
+                order="md:order-1"
+              />
+              <HealthBar
+                current={10}
+                max={20}
+                label="Player Mana"
+                color="bg-blue-500"
+                order="md:order-3"
               />
               <HealthBar
                 current={gameState.enemy === null ? 0 : gameState.enemy.shield}
                 max={enemyShieldMax}
                 label="Enemy Health"
                 color="bg-red-800"
+                order="md:order-2"
+              />
+              <StatusDisplay
+                order="md:order-4"
               />
             </div>
           )
