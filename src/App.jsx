@@ -1,7 +1,52 @@
 import { useState, useRef, useEffect } from 'react'
 import './App.css'
 
+function exampleButtonCallback(action) {
+  console.log(`Callback called with ${action}`)
+}
 
+const ExampleActions = Object.freeze({
+  EXAMPLE_ONE: "EXAMPLE_ONE",
+  EXAMPLE_TWO: "EXAMPLE_TWO",
+  EXAMPLE_THREE: "EXAMPLE_THREE"
+});
+
+const exampleButtonInfos = [
+  {
+    buttonText: "Example 1",
+    callback: () => exampleButtonCallback(ExampleActions.EXAMPLE_ONE),
+    backgroundColor: "bg-red-800",
+    backgroundColorHover: "bg-red-900",
+    key: crypto.randomUUID()
+  },
+  {
+    buttonText: "Example 2",
+    callback: () => exampleButtonCallback(ExampleActions.EXAMPLE_TWO),
+    backgroundColor: "bg-indigo-800",
+    backgroundColorHover: "bg-indigo-900",
+    key: crypto.randomUUID()
+  },
+  {
+    buttonText: "Example 3",
+    callback: () => exampleButtonCallback(ExampleActions.EXAMPLE_THREE),
+    backgroundColor: "bg-indigo-800",
+    backgroundColorHover: "bg-indigo-900",
+    key: crypto.randomUUID()
+  }
+]
+
+function ButtonBar({ buttonInfos }) {
+  const listItems = buttonInfos.map(buttonInfo => {
+    console.log(buttonInfo.key);
+    return <li>
+      <button key={buttonInfo.key} className={`block w-full sm:w-auto mb-4 sm:mb-0 ${buttonInfo.backgroundColor} hover:${buttonInfo.backgroundColorHover} text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200`} onClick={buttonInfo.callback}>
+        {buttonInfo.buttonText}
+      </button>
+    </li>;
+  });
+
+  return <ul>{listItems}</ul>;
+}
 
 const RPGInterface = () => {
   const [messages, setMessages] = useState([
@@ -234,6 +279,13 @@ const RPGInterface = () => {
             <div ref={messagesBottom}></div>
           </div>
         </div>
+
+        {/* Test */}
+        {
+          <div>
+            <ButtonBar buttonInfos={exampleButtonInfos} />
+          </div>
+        }
 
         {/* Health Bars */}
         {
