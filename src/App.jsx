@@ -4,10 +4,7 @@ import './App.css'
 
 
 const RPGInterface = () => {
-  const [messages, setMessages] = useState([
-    "This is where all the messages appear.",
-    "These messages are super engaging and interesting, I promise."
-  ]);
+  const [messages, setMessages] = useState([]);
 
   const messagesBottom = useRef(null);
 
@@ -35,21 +32,30 @@ const RPGInterface = () => {
 
 
   const [gameState, setGameState] = useState(
-    {
-      player: {
-        shield: 10,
-        defeated: false,
-        weapon: {
-          baseDamage: 3,
-          bonusDamageMin: 0,
-          bonusDamageMax: 2
-        }
-      },
-      enemy: null,
-      enemiesDefeated: 0,
-      gameScene: GameScene.MENU_SCENE,
-    }
+    { gameScene: GameScene.MENU_SCENE }
   );
+
+  const initGame = (state) => {
+    state.player = {
+      shield: 10,
+      defeated: false,
+      weapon: {
+        baseDamage: 3,
+        bonusDamageMin: 0,
+        bonusDamageMax: 2
+      }
+    };
+    state.enemy = null;
+    state.enemiesDefeated = 0;
+  };
+
+  useEffect(() => {
+      setGameState((prevState) => {
+        const localState = structuredClone(prevState);
+        initGame(localState);
+        return localState;
+      })
+  }, []);
 
   const weaponAttackDamage = (weapon) => {
     return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
@@ -104,13 +110,13 @@ const RPGInterface = () => {
   };
 
   const printStatus = (localState) => {
-    let result = `Player Shield: ${localState.player.shield}/${playerShieldMax}\n`;
+    const result = [`Player Shield: ${localState.player.shield}/${playerShieldMax}`];
     if (localState.enemy === null) {
-      result += "Enemy Shield: N/A\n";
+      result.push("Enemy Shield: N/A");
     } else {
-      result += `Enemy Shield: ${localState.enemy.shield}/${enemyShieldMax}\n`;
+      result.push(`Enemy Shield: ${localState.enemy.shield}/${enemyShieldMax}`);
     }
-    log(result);
+    log(result.join('\n'));
   };
 
   const enemyAttack = (localState) => {
@@ -131,65 +137,67 @@ const RPGInterface = () => {
 
   const handleAction = (action) => {
     setGameState((prevState) => {
-      const localState = structuredClone(prevState);
-      if (localState.gameScene === GameScene.MENU_SCENE) {
-        if (action === MenuSceneAction.SAVE) {
-          console.log("Saving not implemented yet.");
-        } else if (action === MenuSceneAction.RESTART) {
-          localState.player.shield = 10;
-          localState.player.defeated = false;
-          localState.enemy = null;
-          localState.enemiesDefeated = 0;
-          localState.gameScene = GameScene.MENU_SCENE;
-          log("Started a new game.");
-          printStatus(localState);
-        } else if (action === MenuSceneAction.BATTLE) {
-          if (localState.player.defeated) {
-            log("Player was defeated. Click Restart to start a new game.");
-          } else {
-            localState.enemy = createEnemy(localState.enemy === null ? 1 : localState.enemy.level + 1);
-            localState.gameScene = GameScene.BATTLE_SCENE;
+      try {
+        const localState = structuredClone(prevState);
+        if (localState.gameScene === GameScene.MENU_SCENE) {
+          if (action === MenuSceneAction.SAVE) {
+            throw "Saving not implemented yet.";
+          } else if (action === MenuSceneAction.RESTART) {
+            localState.gameScene = GameScene.MENU_SCENE;
+            initGame(localState);
+            log("Started a new game.");
             printStatus(localState);
+          } else if (action === MenuSceneAction.BATTLE) {
+            if (localState.player.defeated) {
+              log("Player was defeated. Click Restart to start a new game.");
+            } else {
+              localState.enemy = createEnemy(localState.enemy === null ? 1 : localState.enemy.level + 1);
+              localState.gameScene = GameScene.BATTLE_SCENE;
+              printStatus(localState);
+            }
+          } else {
+            // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
+            throw `Unknown command ${action}`;
+          }
+        } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
+          if (action === BattleSceneAction.ATTACK) {
+            const damage = weaponAttackDamage(localState.player.weapon);
+            applyEnemyDamage(localState, damage);
+            log(`Player attacks for ${damage} damage!`);
+            if (localState.enemy.defeated) {
+              printStatus(localState);
+              log("Enemy defeated!");
+              localState.enemiesDefeated = localState.enemiesDefeated + 1;
+              const rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
+              rechargePlayerShield(localState, rechargeBonus);
+              log(
+                `Shield recharged by ${rechargeBonus} to ${localState.player.shield}/${playerShieldMax}`
+              );
+              localState.gameScene = GameScene.MENU_SCENE;
+            } else {
+              enemyAttack(localState);
+            }
+          } else if (action === BattleSceneAction.SHIELD) {
+            const recharge = playerBaseShieldRecharge * 3;
+            rechargePlayerShield(localState, recharge);
+            log(`Focusing the shield recharges by ${recharge} to ${localState.player.shield}/${playerShieldMax}`);
+            enemyAttack(localState);
+          } else if (action === BattleSceneAction.CONCEDE) {
+            log(`Conceding. Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
+            log("Click Restart to start a new game.");
+            localState.player.defeated = true;
+            localState.gameScene = GameScene.MENU_SCENE;
           }
         } else {
-          // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
-          console.assert(false);
-          log(`Unknown command ${action}`);
+          throw `Unknown scene ${localState.gameScene}`;
         }
-      } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
-        if (action === BattleSceneAction.ATTACK) {
-          const damage = weaponAttackDamage(localState.player.weapon);
-          applyEnemyDamage(localState, damage);
-          log(`Player attacks for ${damage} damage!`);
-          if (localState.enemy.defeated) {
-            printStatus(localState);
-            log("Enemy defeated!");
-            localState.enemiesDefeated = localState.enemiesDefeated + 1;
-            const rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
-            rechargePlayerShield(localState, rechargeBonus);
-            log(
-              `Shield recharged by ${rechargeBonus} to ${localState.player.shield}/${playerShieldMax}`
-            );
-            localState.gameScene = GameScene.MENU_SCENE;
-          } else {
-            enemyAttack(localState);
-          }
-        } else if (action === BattleSceneAction.SHIELD) {
-          const recharge = playerBaseShieldRecharge * 3;
-          rechargePlayerShield(localState, recharge);
-          log(`Focusing the shield recharges by ${recharge} to ${localState.player.shield}/${playerShieldMax}`);
-          enemyAttack(localState);
-        } else if (action === BattleSceneAction.CONCEDE) {
-          log(`Conceding. Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-          log("Click Restart to start a new game.");
-          localState.player.defeated = true;
-          localState.gameScene = GameScene.MENU_SCENE;
-        }
-      } else {
-        console.assert(false);
-        log(`Unknown scene ${localState.gameScene}`);
+        return localState;
+      } catch (error) {
+        console.error(error);
+        log(error);
+        // Leave state unchanged if there's an error
+        return structuredClone(prevState);
       }
-      return localState;
     });
   };
 
