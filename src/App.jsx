@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import './App.css'
 
+// @source inline('{grid-cols-({1..12})');
+
 function exampleButtonCallback(action) {
   console.log(`Callback called with ${action}`)
 }
@@ -32,21 +34,64 @@ const exampleButtonInfos = [
     backgroundColor: "bg-indigo-800",
     backgroundColorHover: "bg-indigo-900",
     key: crypto.randomUUID()
+  },
+  {
+    buttonText: "Example 4",
+    callback: () => exampleButtonCallback(ExampleActions.EXAMPLE_THREE),
+    backgroundColor: "bg-indigo-800",
+    backgroundColorHover: "bg-indigo-900",
+    key: crypto.randomUUID()
+  },
+  {
+    buttonText: "Example 4",
+    callback: () => exampleButtonCallback(ExampleActions.EXAMPLE_THREE),
+    backgroundColor: "bg-indigo-800",
+    backgroundColorHover: "bg-indigo-900",
+    key: crypto.randomUUID()
   }
 ]
 
-function ButtonBar({ buttonInfos }) {
+const makeGridColsClass = (numCols) => {
+  if (numCols === 1) {
+    return "grid-cols-1";
+  } else if (numCols === 2) {
+    return "grid-cols-2";
+  } else if (numCols === 3) {
+    return "grid-cols-3";
+  } else if (numCols === 4) {
+    return "grid-cols-4";
+  } else if (numCols === 5) {
+    return "grid-cols-5";
+  } else {
+    return "grid-cols-6";
+  }
+}
+
+function ButtonBar({ buttonInfos, gridColsClass }) {
   const listItems = buttonInfos.map(buttonInfo => {
-    console.log(buttonInfo.key);
-    return <li>
-      <button key={buttonInfo.key} className={`block w-full sm:w-auto mb-4 sm:mb-0 ${buttonInfo.backgroundColor} hover:${buttonInfo.backgroundColorHover} text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200`} onClick={buttonInfo.callback}>
-        {buttonInfo.buttonText}
-      </button>
-    </li>;
+    return <button
+      key={buttonInfo.key}
+      className={`block w-full sm:w-auto mb-4 sm:mb-0 ${buttonInfo.backgroundColor} hover:${buttonInfo.backgroundColorHover} text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200`}
+      onClick={buttonInfo.callback}
+    >
+      {buttonInfo.buttonText}
+    </button>
   });
 
-  return <ul>{listItems}</ul>;
+  console.log(listItems.length)
+  // return <div className={`grid ${makeGridColsClass(listItems.length)} gap-4`}>
+  return <div className={`grid ${gridColsClass} gap-4`}>
+    {listItems}
+  </ div >;
 }
+
+// return <div className="grid grid-cols-[var(--dynamic-length)] gap-4"
+//   style={{
+//     '--dynamic-length': listItems.length,
+//   }}>
+//   {listItems}
+// </div >;
+
 
 const RPGInterface = () => {
   const [messages, setMessages] = useState([
@@ -149,11 +194,11 @@ const RPGInterface = () => {
   };
 
   const printStatus = (localState) => {
-    let result = `Player Shield: ${localState.player.shield}/${playerShieldMax}\n`;
+    let result = `Player Shield:${localState.player.shield} /${playerShieldMax}\n`;
     if (localState.enemy === null) {
       result += "Enemy Shield: N/A\n";
     } else {
-      result += `Enemy Shield: ${localState.enemy.shield}/${enemyShieldMax}\n`;
+      result += `Enemy Shield: ${localState.enemy.shield} / ${enemyShieldMax}\n`;
     }
     log(result);
   };
@@ -282,8 +327,8 @@ const RPGInterface = () => {
 
         {/* Test */}
         {
-          <div>
-            <ButtonBar buttonInfos={exampleButtonInfos} />
+          <div className="mb-8">
+            <ButtonBar buttonInfos={exampleButtonInfos} gridColsClass={"grid-cols-3"} />
           </div>
         }
 
@@ -310,7 +355,7 @@ const RPGInterface = () => {
         {/* Command Buttons */}
         <div className="space-y-4">
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-            <h3 className="text-sm font-medium text-gray-300 mb-4">{!(gameState.gameScene === GameScene.MENU_SCENE) ? 'Combat Actions' : 'Game Options'}</h3>
+            <h3 className={`text-sm ${gameState.gameScene} font-medium text-gray-300 mb-4`}>{!(gameState.gameScene === GameScene.MENU_SCENE) ? 'Combat Actions' : 'Game Options'}</h3>
             <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
               {gameState.gameScene === GameScene.BATTLE_SCENE ? (
                 <>
