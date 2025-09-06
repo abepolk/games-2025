@@ -50,11 +50,11 @@ const RPGInterface = () => {
   };
 
   useEffect(() => {
-      setGameState((prevState) => {
-        const localState = structuredClone(prevState);
-        initGame(localState);
-        return localState;
-      })
+    setGameState((prevState) => {
+      const localState = structuredClone(prevState);
+      initGame(localState);
+      return localState;
+    })
   }, []);
 
   const weaponAttackDamage = (weapon) => {
@@ -221,6 +221,21 @@ const RPGInterface = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">Adventure Quest</h1>
+
+        <div class="items-center
+                    fixed
+                    top-6 right-6
+                    flex h-[1.2lh]
+                    w-[1.2lh]
+                    shrink-0
+                    justify-center
+                    rounded-full
+                    font-[Arial]
+                    text-2xl
+                    text-gray-100
+                    bg-[#2e406b]">
+          ?
+        </div>
 
         {/* Main Game Area */}
         {/* Console/Messages Area */}
