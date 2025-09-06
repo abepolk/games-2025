@@ -6,6 +6,9 @@ import './App.css'
 const RPGInterface = () => {
   const [messages, setMessages] = useState([]);
 
+  const [helpHovered, setHelpHovered] = useState(false);
+  const [helpClicked, setHelpClicked] = useState(true);
+
   const messagesBottom = useRef(null);
 
   const playerShieldMax = 100;
@@ -233,11 +236,16 @@ const RPGInterface = () => {
                     font-[Arial]
                     text-2xl
                     text-gray-100
-                    bg-[#2e406b]">
+                    bg-[#2e406b]
+                    hover:bg-[#2e4680]"
+          onMouseEnter={() => setHelpHovered(true)}
+          onMouseLeave={() => setHelpHovered(false)}
+          onClick={() => setHelpClicked(clicked => !clicked)}
+        >
           ?
         </div>
 
-        <div class="fixed
+        <div class={`fixed
           top-1/2
           left-1/2
           w-3/4
@@ -245,13 +253,16 @@ const RPGInterface = () => {
           -translate-x-1/2
           -translate-y-1/2
           bg-[#2e406b]
-          opacity-95
           leading-relaxed
           p-8
           rounded-lg
           text-md
           lg:text-lg
-          max-w-2xl">
+          max-w-2xl
+          ${helpHovered ? "lg:opacity-100" : "lg:opacity-0"}
+          ${helpClicked ? "" : "opacity-0"}
+          transition-opacity
+          duration-150`}>
           <div class="mb-4">
             <p>
               Win as many battles as you can before being defeated!
