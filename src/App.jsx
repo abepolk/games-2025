@@ -237,6 +237,46 @@ const RPGInterface = () => {
           ?
         </div>
 
+        <div class="fixed
+          top-1/2
+          left-1/2
+          w-3/4
+          lg:w-2/3
+          -translate-x-1/2
+          -translate-y-1/2
+          bg-[#2e406b]
+          opacity-95
+          leading-relaxed
+          p-8
+          rounded-lg
+          text-md
+          lg:text-lg
+          max-w-2xl">
+          <div class="mb-4">
+            <p>
+              Win as many battles as you can before being defeated!
+            </p>
+          </div>
+          <div>
+            <p>
+              Click "Battle" to start each battle.
+            </p>
+            <p>
+              Click "Restart" after any battle to reset.
+            </p>
+            <p>
+              In battle mode, click "Attack" to damage the opponent
+              and click "Defend" to heal.
+            </p>
+            <p>
+              You automatically heal a small amount between battles.
+            </p>
+            <p>
+              Each subsequent opponent is harder than the previous.
+            </p>
+          </div>
+        </div>
+
         {/* Main Game Area */}
         {/* Console/Messages Area */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 mb-8">
