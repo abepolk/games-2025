@@ -6,6 +6,9 @@ import './App.css'
 const RPGInterface = () => {
   const [messages, setMessages] = useState([]);
 
+  const [helpHovered, setHelpHovered] = useState(false);
+  const [helpClicked, setHelpClicked] = useState(true);
+
   const messagesBottom = useRef(null);
 
   const playerShieldMax = 100;
@@ -50,11 +53,11 @@ const RPGInterface = () => {
   };
 
   useEffect(() => {
-      setGameState((prevState) => {
-        const localState = structuredClone(prevState);
-        initGame(localState);
-        return localState;
-      })
+    setGameState((prevState) => {
+      const localState = structuredClone(prevState);
+      initGame(localState);
+      return localState;
+    })
   }, []);
 
   const weaponAttackDamage = (weapon) => {
@@ -221,6 +224,69 @@ const RPGInterface = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">Adventure Quest</h1>
+
+        <div class="items-center
+                    fixed
+                    top-6 right-6
+                    flex h-[1.2lh]
+                    w-[1.2lh]
+                    shrink-0
+                    justify-center
+                    rounded-full
+                    font-[Arial]
+                    text-2xl
+                    text-gray-100
+                    bg-[#2e406b]
+                    hover:bg-[#2e4680]"
+          onMouseEnter={() => setHelpHovered(true)}
+          onMouseLeave={() => setHelpHovered(false)}
+          onClick={() => setHelpClicked(clicked => !clicked)}
+        >
+          ?
+        </div>
+
+        <div class={`fixed
+          top-1/2
+          left-1/2
+          w-3/4
+          lg:w-2/3
+          -translate-x-1/2
+          -translate-y-1/2
+          bg-[#2e406b]
+          leading-relaxed
+          p-8
+          rounded-lg
+          text-md
+          lg:text-lg
+          max-w-2xl
+          ${helpHovered ? "lg:opacity-100" : "lg:opacity-0"}
+          ${helpClicked ? "" : "opacity-0"}
+          transition-opacity
+          duration-150`}>
+          <div class="mb-4">
+            <p>
+              Win as many battles as you can before being defeated!
+            </p>
+          </div>
+          <div>
+            <p>
+              Click "Battle" to start each battle.
+            </p>
+            <p>
+              Click "Restart" after any battle to reset.
+            </p>
+            <p>
+              In battle mode, click "Attack" to damage the opponent
+              and click "Defend" to heal.
+            </p>
+            <p>
+              You automatically heal a small amount between battles.
+            </p>
+            <p>
+              Each subsequent opponent is harder than the previous.
+            </p>
+          </div>
+        </div>
 
         {/* Main Game Area */}
         {/* Console/Messages Area */}
