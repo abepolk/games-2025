@@ -293,11 +293,21 @@ const RPGInterface = () => {
 
         {/* Main Game Area */}
         {/* Console/Messages Area */}
+        {/* Now that we're trying to have the console grow / shrink to fit the
+        available space, the overflow-y-scroll doesn't do anything and instead
+        adding more messages causes the console to grow beyond the bottom of the
+        screen. We think this is because the overflow-y-scroll needs to be in
+        an element with a defined height. But we took out the h-96 to allow it to
+        grow/shrink.
+        If we put the overflow-y-scroll in the 
+        <div className="bg-gray-800 grow rounded-lg border border-gray-700 mb-8">
+        line, the size and scrolling work as we want, but the wrong element is scrolling. */}
         <div className="bg-gray-800 grow rounded-lg border border-gray-700 mb-8">
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
           <div className="p-4 overflow-y-scroll space-y-3">
+            {/* <div className="p-4 space-y-3"> */}
             {messages.map((message, index) => (
               <div
                 key={index}
