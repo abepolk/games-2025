@@ -7,7 +7,7 @@ const RPGInterface = () => {
   const [messages, setMessages] = useState([]);
 
   const [helpHovered, setHelpHovered] = useState(false);
-  const [helpClicked, setHelpClicked] = useState(true);
+  const [helpClicked, setHelpClicked] = useState(false);
 
   const messagesBottom = useRef(null);
 
