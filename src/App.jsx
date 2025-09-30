@@ -205,7 +205,7 @@ const RPGInterface = () => {
   };
 
   const HealthBar = ({ current, max, label, color }) => (
-    <div className="bg-gray-800 rounded-lg p-4">
+    <>
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-gray-300">{label}</span>
         <span className="text-sm text-gray-400">{current}/{max}</span>
@@ -216,12 +216,13 @@ const RPGInterface = () => {
           style={{ width: `${(current / max) * 100}%` }}
         />
       </div>
-    </div>
+    </>
   );
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="min-h-screen flex flex-col max-w-4xl mx-auto">
+      {/* the 12 has to be 2x the 6 in p-6 */}
+      <div className="min-h-[calc(100vh_-_12_*_var(--spacing))] flex flex-col max-w-4xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">Adventure Quest</h1>
 
@@ -292,11 +293,11 @@ const RPGInterface = () => {
 
         {/* Main Game Area */}
         {/* Console/Messages Area */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 mb-8">
+        <div className="bg-gray-800 grow rounded-lg border border-gray-700 mb-8">
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
-          <div className="p-4 h-96 overflow-y-scroll space-y-3">
+          <div className="p-4 overflow-y-scroll space-y-3">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -315,18 +316,34 @@ const RPGInterface = () => {
         {
           gameState.gameScene === GameScene.BATTLE_SCENE && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
-              <HealthBar
-                current={gameState.player.shield}
-                max={playerShieldMax}
-                label="Player Health"
-                color="bg-green-500"
-              />
-              <HealthBar
-                current={gameState.enemy === null ? 0 : gameState.enemy.shield}
-                max={enemyShieldMax}
-                label="Enemy Health"
-                color="bg-red-800"
-              />
+              <div className="bg-gray-800 rounded-lg p-4">
+                <HealthBar
+                  current={gameState.player.shield}
+                  max={playerShieldMax}
+                  label="Player Health"
+                  color="bg-green-500"
+                />
+              </div>
+              <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                <HealthBar
+                  current={gameState.enemy === null ? 0 : gameState.enemy.shield}
+                  max={enemyShieldMax}
+                  label="Enemy Health"
+                  color="bg-red-800"
+                />
+                <HealthBar
+                  current={gameState.enemy === null ? 0 : gameState.enemy.shield}
+                  max={enemyShieldMax}
+                  label="Enemy Health"
+                  color="bg-red-800"
+                />
+                <HealthBar
+                  current={gameState.enemy === null ? 0 : gameState.enemy.shield}
+                  max={enemyShieldMax}
+                  label="Enemy Health"
+                  color="bg-red-800"
+                />
+              </div>
             </div>
           )
         }
