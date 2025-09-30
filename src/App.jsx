@@ -221,11 +221,11 @@ const RPGInterface = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen flex flex-col max-w-4xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">Adventure Quest</h1>
 
-        <div class="items-center
+        <div className="items-center
                     fixed
                     top-6 right-6
                     flex h-[1.2lh]
@@ -245,7 +245,7 @@ const RPGInterface = () => {
           ?
         </div>
 
-        <div class={`fixed
+        <div className={`fixed
           top-1/2
           left-1/2
           w-3/4
@@ -259,11 +259,13 @@ const RPGInterface = () => {
           text-md
           lg:text-lg
           max-w-2xl
-          ${helpHovered ? "lg:opacity-100" : "lg:opacity-0"}
-          ${helpClicked ? "" : "opacity-0"}
-          transition-opacity
-          duration-150`}>
-          <div class="mb-4">
+          ${helpHovered ? "lg:block lg:opacity-100" : "lg:hidden lg:opacity-0"}
+          ${helpClicked ? "" : "hidden opacity-0"}
+          transition
+          transition-discrete
+          starting:opacity-0
+          duration-1000`}>
+          <div className="mb-4">
             <p>
               Win as many battles as you can before being defeated!
             </p>
