@@ -222,7 +222,7 @@ const RPGInterface = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       {/* the 12 has to be 2x the 6 in p-6 */}
-      <div className="min-h-[calc(100vh_-_12_*_var(--spacing))] flex flex-col max-w-4xl mx-auto">
+      <div className="min-h-[calc(100vh_-_12_*_var(--spacing))] max-h-screen flex flex-col max-w-4xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">Adventure Quest</h1>
 
@@ -302,7 +302,7 @@ const RPGInterface = () => {
         If we put the overflow-y-scroll in the 
         <div className="bg-gray-800 grow rounded-lg border border-gray-700 mb-8">
         line, the size and scrolling work as we want, but the wrong element is scrolling. */}
-        <div className="bg-gray-800 grow rounded-lg border border-gray-700 mb-8">
+        <div className="bg-gray-800 flex flex-col grow overflow-hidden min-h-[2_*_2_*_var(--spacing)_+_var(--text-sm)_+_2_*_4_var(--spacing)_+_var(--text-sm))] rounded-lg border border-gray-700 mb-8">
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
