@@ -28,7 +28,8 @@ const RPGInterface = () => {
   });
 
   const BattleSceneAction = Object.freeze({
-    ATTACK: "ATTACK",
+    ATTACK_STEP_1: "ATTACK_STEP_1",
+    ATTACK_STEP_2: "ATTACK_STEP_2",
     SHIELD: "SHIELD",
     CONCEDE: "CONCEDE"
   });
@@ -49,7 +50,14 @@ const RPGInterface = () => {
       }
     };
     state.enemy = null;
+    // Currently unused 
+    state.enemies = [
+      undefined,
+      undefined,
+      undefined
+    ]
     state.enemiesDefeated = 0;
+    state.attackStep2 = false;
   };
 
   useEffect(() => {
@@ -163,7 +171,10 @@ const RPGInterface = () => {
             throw `Unknown command ${action}`;
           }
         } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
-          if (action === BattleSceneAction.ATTACK) {
+          if (action === BattleSceneAction.ATTACK_STEP_1) {
+            localState.attackStep2 = true;
+          } else if (action === BattleSceneAction.ATTACK_STEP_2) {
+            localState.attackStep2 = false;
             const damage = weaponAttackDamage(localState.player.weapon);
             applyEnemyDamage(localState, damage);
             log(`Player attacks for ${damage} damage!`);
@@ -204,19 +215,34 @@ const RPGInterface = () => {
     });
   };
 
-  const HealthBar = ({ current, max, label, color }) => (
-    <>
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-300">{label}</span>
-        <span className="text-sm text-gray-400">{current}/{max}</span>
+  const HealthBar = ({ attackable, current, max, label, color }) => (
+    <div className="flex">
+      {attackable && (
+        <div className="bg-gray-600
+          rounded-lg
+          px-4
+          mr-4
+          flex
+          flex-col
+          justify-center"
+          onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_2); }}
+        >
+          Select
+        </div>
+      )}
+      <div className="grow">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-gray-300">{label}</span>
+          <span className="text-sm text-gray-400">{current}/{max}</span>
+        </div>
+        <div className="w-full bg-gray-700 rounded-full h-3">
+          <div
+            className={`h-3 rounded-full transition-all duration-300 ${color}`}
+            style={{ width: `${(current / max) * 100}%` }}
+          />
+        </div>
       </div>
-      <div className="w-full bg-gray-700 rounded-full h-3">
-        <div
-          className={`h-3 rounded-full transition-all duration-300 ${color}`}
-          style={{ width: `${(current / max) * 100}%` }}
-        />
-      </div>
-    </>
+    </div>
   );
 
   return (
@@ -301,14 +327,14 @@ const RPGInterface = () => {
         buttons out of the viewport, which is not what we want. The
         messy math for min-h is there because we want the console to be
         at least as high as the header plus one line of text, and I've
-        added the padding and text size of the header along with a
-        potential first message. */}
+        added the top and bottom padding (2 * padding) and text size of the header along with a
+        potential first message. Although it doesn't seem to do anything
+        right now. */}
         <div className="bg-gray-800 flex flex-col grow overflow-hidden min-h-[2_*_2_*_var(--spacing)_+_var(--text-sm)_+_2_*_4_var(--spacing)_+_var(--text-sm))] rounded-lg border border-gray-700 mb-8">
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
           <div className="p-4 overflow-y-scroll space-y-3">
-            {/* <div className="p-4 space-y-3"> */}
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -336,24 +362,15 @@ const RPGInterface = () => {
                 />
               </div>
               <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                <HealthBar
-                  current={gameState.enemy === null ? 0 : gameState.enemy.shield}
-                  max={enemyShieldMax}
-                  label="Enemy Health"
-                  color="bg-red-800"
-                />
-                <HealthBar
-                  current={gameState.enemy === null ? 0 : gameState.enemy.shield}
-                  max={enemyShieldMax}
-                  label="Enemy Health"
-                  color="bg-red-800"
-                />
-                <HealthBar
-                  current={gameState.enemy === null ? 0 : gameState.enemy.shield}
-                  max={enemyShieldMax}
-                  label="Enemy Health"
-                  color="bg-red-800"
-                />
+                {gameState.enemies.map((_, index) => (
+                  <HealthBar
+                    attackable={gameState.attackStep2}
+                    current={gameState.enemy === null ? 0 : gameState.enemy.shield}
+                    max={enemyShieldMax}
+                    label="Enemy Health"
+                    color="bg-red-800"
+                  />
+                ))}
               </div>
             </div>
           )
@@ -366,7 +383,7 @@ const RPGInterface = () => {
             <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
               {gameState.gameScene === GameScene.BATTLE_SCENE ? (
                 <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK); }}>
+                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}>
                     Attack
                   </button>
                   <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.SHIELD); }}>
