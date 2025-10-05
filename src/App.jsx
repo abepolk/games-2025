@@ -293,15 +293,16 @@ const RPGInterface = () => {
 
         {/* Main Game Area */}
         {/* Console/Messages Area */}
-        {/* Now that we're trying to have the console grow / shrink to fit the
-        available space, the overflow-y-scroll doesn't do anything and instead
-        adding more messages causes the console to grow beyond the bottom of the
-        screen. We think this is because the overflow-y-scroll needs to be in
-        an element with a defined height. But we took out the h-96 to allow it to
-        grow/shrink.
-        If we put the overflow-y-scroll in the 
-        <div className="bg-gray-800 grow rounded-lg border border-gray-700 mb-8">
-        line, the size and scrolling work as we want, but the wrong element is scrolling. */}
+        {/* overflow-hidden is there because overflow-y-scroll, without
+        overflow-hidden and a way of limiting the height of the parent
+        div of the overflow-scrolling div, won't do anything. Instead,
+        in this case, if the console messages try to overflow, the
+        console will just get bigger to contain them, pushing the lower
+        buttons out of the viewport, which is not what we want. The
+        messy math for min-h is there because we want the console to be
+        at least as high as the header plus one line of text, and I've
+        added the padding and text size of the header along with a
+        potential first message. */}
         <div className="bg-gray-800 flex flex-col grow overflow-hidden min-h-[2_*_2_*_var(--spacing)_+_var(--text-sm)_+_2_*_4_var(--spacing)_+_var(--text-sm))] rounded-lg border border-gray-700 mb-8">
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
