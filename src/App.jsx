@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import './App.css'
 
+import {
+  GameScene,
+  MenuSceneAction,
+  BattleSceneAction,
+  PLAYER_SHIELD_MAX,
+  ENEMY_SHIELD_MAX,
+  initGame,
+  updateState
+} from './gameLogic.js'
+
 
 
 const RPGInterface = () => {
@@ -11,54 +21,9 @@ const RPGInterface = () => {
 
   const messagesBottom = useRef(null);
 
-  const playerShieldMax = 100;
-  const playerBaseShieldRecharge = 2;
-
-  const enemyShieldMax = 20;
-
-  const GameScene = Object.freeze({
-    MENU_SCENE: "MENU_SCENE",
-    BATTLE_SCENE: "BATTLE_SCENE",
-  });
-
-  const MenuSceneAction = Object.freeze({
-    BATTLE: "BATTLE",
-    SAVE: "SAVE",
-    RESTART: "RESTART"
-  });
-
-  const BattleSceneAction = Object.freeze({
-    ATTACK_STEP_1: "ATTACK_STEP_1",
-    ATTACK_STEP_2: "ATTACK_STEP_2",
-    SHIELD: "SHIELD",
-    CONCEDE: "CONCEDE"
-  });
-
-
   const [gameState, setGameState] = useState(
     { gameScene: GameScene.MENU_SCENE }
   );
-
-  const initGame = (state) => {
-    state.player = {
-      shield: 10,
-      defeated: false,
-      weapon: {
-        baseDamage: 3,
-        bonusDamageMin: 0,
-        bonusDamageMax: 2
-      }
-    };
-    state.enemy = null;
-    // Currently unused 
-    state.enemies = [
-      undefined,
-      undefined,
-      undefined
-    ]
-    state.enemiesDefeated = 0;
-    state.attackStep2 = false;
-  };
 
   useEffect(() => {
     setGameState((prevState) => {
@@ -68,47 +33,6 @@ const RPGInterface = () => {
     })
   }, []);
 
-  const weaponAttackDamage = (weapon) => {
-    return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
-  };
-
-  const createEnemy = (level) => {
-    return {
-      level,
-      weapon: {
-        baseDamage: level,
-        bonusDamageMin: 1 + Math.floor(level / 10),
-        bonusDamageMax: 2 + Math.floor(level / 5),
-      },
-      shield: 10,
-      defeated: false
-    }
-  };
-
-  const applyEnemyDamage = (localState, amount) => {
-    if (amount >= localState.enemy.shield) {
-      localState.enemy.defeated = true;
-      localState.enemy.shield = 0;
-    } else {
-      localState.enemy.shield = localState.enemy.shield - amount;
-      console.assert(localState.enemy.shield > 0);
-    }
-  };
-
-  const applyPlayerDamage = (localState, amount) => {
-    if (amount >= localState.player.shield) {
-      localState.player.defeated = true
-      localState.player.shield = 0;
-    } else {
-      const newShieldAmount = localState.player.shield - amount;
-      localState.player.shield = newShieldAmount;
-      console.assert(localState.player.shield > 0);
-    }
-  };
-
-  const rechargePlayerShield = (localState, amount) => {
-    localState.player.shield = Math.min(playerShieldMax, localState.player.shield + amount);
-  };
 
   useEffect(() => {
     if (messagesBottom.current) {
@@ -116,99 +40,18 @@ const RPGInterface = () => {
     }
   }, [messages]);
 
-  const log = (message) => {
+  const appendMessage = (message) => {
     setMessages(messages => [...messages, message]);
-  };
-
-  const printStatus = (localState) => {
-    const result = [`Player Shield: ${localState.player.shield}/${playerShieldMax}`];
-    if (localState.enemy === null) {
-      result.push("Enemy Shield: N/A");
-    } else {
-      result.push(`Enemy Shield: ${localState.enemy.shield}/${enemyShieldMax}`);
-    }
-    log(result.join('\n'));
-  };
-
-  const enemyAttack = (localState) => {
-    const enemyDamage = weaponAttackDamage(localState.enemy.weapon);
-    applyPlayerDamage(localState, enemyDamage);
-    log(`Enemy attacks for ${enemyDamage} damage!`);
-    printStatus(localState);
-    if (localState.player.defeated) {
-      log(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-      log("Click Restart to start a new game.");
-      localState.gameScene = GameScene.MENU_SCENE;
-    } else {
-      rechargePlayerShield(localState, playerBaseShieldRecharge);
-      log(`Player shield recharges by ${playerBaseShieldRecharge} to ${localState.player.shield}/${playerShieldMax}`);
-      printStatus(localState);
-    }
   };
 
   const handleAction = (action) => {
     setGameState((prevState) => {
       try {
-        const localState = structuredClone(prevState);
-        if (localState.gameScene === GameScene.MENU_SCENE) {
-          if (action === MenuSceneAction.SAVE) {
-            throw "Saving not implemented yet.";
-          } else if (action === MenuSceneAction.RESTART) {
-            localState.gameScene = GameScene.MENU_SCENE;
-            initGame(localState);
-            log("Started a new game.");
-            printStatus(localState);
-          } else if (action === MenuSceneAction.BATTLE) {
-            if (localState.player.defeated) {
-              log("Player was defeated. Click Restart to start a new game.");
-            } else {
-              localState.enemy = createEnemy(localState.enemy === null ? 1 : localState.enemy.level + 1);
-              localState.gameScene = GameScene.BATTLE_SCENE;
-              printStatus(localState);
-            }
-          } else {
-            // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
-            throw `Unknown command ${action}`;
-          }
-        } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
-          if (action === BattleSceneAction.ATTACK_STEP_1) {
-            localState.attackStep2 = true;
-          } else if (action === BattleSceneAction.ATTACK_STEP_2) {
-            localState.attackStep2 = false;
-            const damage = weaponAttackDamage(localState.player.weapon);
-            applyEnemyDamage(localState, damage);
-            log(`Player attacks for ${damage} damage!`);
-            if (localState.enemy.defeated) {
-              printStatus(localState);
-              log("Enemy defeated!");
-              localState.enemiesDefeated = localState.enemiesDefeated + 1;
-              const rechargeBonus = 5 + Math.floor(localState.enemy.level / 5);
-              rechargePlayerShield(localState, rechargeBonus);
-              log(
-                `Shield recharged by ${rechargeBonus} to ${localState.player.shield}/${playerShieldMax}`
-              );
-              localState.gameScene = GameScene.MENU_SCENE;
-            } else {
-              enemyAttack(localState);
-            }
-          } else if (action === BattleSceneAction.SHIELD) {
-            const recharge = playerBaseShieldRecharge * 3;
-            rechargePlayerShield(localState, recharge);
-            log(`Focusing the shield recharges by ${recharge} to ${localState.player.shield}/${playerShieldMax}`);
-            enemyAttack(localState);
-          } else if (action === BattleSceneAction.CONCEDE) {
-            log(`Conceding. Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-            log("Click Restart to start a new game.");
-            localState.player.defeated = true;
-            localState.gameScene = GameScene.MENU_SCENE;
-          }
-        } else {
-          throw `Unknown scene ${localState.gameScene}`;
-        }
-        return localState;
+        const state = structuredClone(prevState);
+        return updateState({action, state, appendMessage});
       } catch (error) {
         console.error(error);
-        log(error);
+        appendMessage(error);
         // Leave state unchanged if there's an error
         return structuredClone(prevState);
       }
@@ -356,7 +199,7 @@ const RPGInterface = () => {
               <div className="bg-gray-800 rounded-lg p-4">
                 <HealthBar
                   current={gameState.player.shield}
-                  max={playerShieldMax}
+                  max={PLAYER_SHIELD_MAX}
                   label="Player Health"
                   color="bg-green-500"
                 />
@@ -364,9 +207,10 @@ const RPGInterface = () => {
               <div className="bg-gray-800 rounded-lg p-4 space-y-4">
                 {gameState.enemies.map((_, index) => (
                   <HealthBar
+                    key={index}
                     attackable={gameState.attackStep2}
                     current={gameState.enemy === null ? 0 : gameState.enemy.shield}
-                    max={enemyShieldMax}
+                    max={ENEMY_SHIELD_MAX}
                     label="Enemy Health"
                     color="bg-red-800"
                   />
