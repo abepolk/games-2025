@@ -44,11 +44,11 @@ const RPGInterface = () => {
     setMessages(messages => [...messages, message]);
   };
 
-  const handleAction = (action) => {
+  const handleAction = (action, options) => {
     setGameState((prevState) => {
       try {
         const state = structuredClone(prevState);
-        return updateState({action, state, appendMessage});
+        return updateState({action, state, appendMessage, options});
       } catch (error) {
         console.error(error);
         appendMessage(error);
@@ -58,7 +58,7 @@ const RPGInterface = () => {
     });
   };
 
-  const HealthBar = ({ attackable, current, max, label, color }) => (
+  const HealthBar = ({ attackable, current, max, label, color, index }) => (
     <div className="flex">
       {attackable && (
         <div className="bg-gray-600
@@ -68,7 +68,9 @@ const RPGInterface = () => {
           flex
           flex-col
           justify-center"
-          onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_2); }}
+          onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_2, {
+            attackedEnemyIndex: index
+          }); }}
         >
           Select
         </div>
@@ -208,6 +210,7 @@ const RPGInterface = () => {
                 {gameState.enemies.map((enemy, index) => (
                   <HealthBar
                     key={index}
+                    index={index}
                     attackable={gameState.attackStep2}
                     current={enemy.shield}
                     max={ENEMY_SHIELD_MAX}

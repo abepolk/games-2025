@@ -40,7 +40,7 @@ const initGame = (state) => {
 
 };
 
-const updateState = ({action, state, appendMessage}) => {
+const updateState = ({action, state, appendMessage, options}) => {
 
   const rechargePlayerShield = (player, amount) => {
     player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
@@ -157,8 +157,8 @@ const updateState = ({action, state, appendMessage}) => {
     } else if (action === BattleSceneAction.ATTACK_STEP_2) {
       state.attackStep2 = false;
       const damage = weaponAttackDamage(state.player.weapon);
-      // For now
-      const enemy = state.enemies[0];
+      console.assert(options.attackedEnemyIndex !== undefined);
+      const enemy = state.enemies[options.attackedEnemyIndex];
       applyEnemyDamage(enemy, damage);
       appendMessage(`Player attacks for ${damage} damage!`);
       if (enemy.defeated) {
