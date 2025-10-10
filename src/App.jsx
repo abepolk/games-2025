@@ -205,11 +205,11 @@ const RPGInterface = () => {
                 />
               </div>
               <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                {gameState.enemies.map((_, index) => (
+                {gameState.enemies.map((enemy, index) => (
                   <HealthBar
                     key={index}
                     attackable={gameState.attackStep2}
-                    current={gameState.enemy === null ? 0 : gameState.enemy.shield}
+                    current={enemy.shield}
                     max={ENEMY_SHIELD_MAX}
                     label="Enemy Health"
                     color="bg-red-800"

@@ -31,32 +31,38 @@ const initGame = (state) => {
       bonusDamageMax: 2
     }
   };
-  state.enemy = null;
+  // state.enemy = null;
   // Currently unused
-  state.enemies = [
-    undefined,
-    undefined,
-    undefined
-  ]
+  state.enemies = []
   state.enemiesDefeated = 0;
+  state.battlesWon = 0;
   state.attackStep2 = false;
 
 };
 
 const updateState = ({action, state, appendMessage}) => {
 
-  const rechargePlayerShield = (localState, amount) => {
-    localState.player.shield = Math.min(PLAYER_SHIELD_MAX, localState.player.shield + amount);
+  const rechargePlayerShield = (player, amount) => {
+    player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
   };
 
-  const printStatus = (localState) => {
-    const result = [`Player Shield: ${localState.player.shield}/${PLAYER_SHIELD_MAX}`];
-    if (localState.enemy === null) {
-      result.push("Enemy Shield: N/A");
-    } else {
-      result.push(`Enemy Shield: ${localState.enemy.shield}/${ENEMY_SHIELD_MAX}`);
+  const debugPrintStatus = () => {
+    const result = [`Player Shield: ${state.player.shield}/${PLAYER_SHIELD_MAX}`];
+    if (state.enemies.length === 0) {
+      console.log("No enemies present");
+      return;
     }
-    appendMessage(result.join('\n'));
+    state.enemies.forEach((enemy, index) => {
+      if (enemy === null) {
+        console.error(`Enemy ${index} is null`);
+        result.push(`Enemy ${index} is null`);
+      } else if (enemy.defeated) {
+        result.push(`Enemy ${index} has been defeated`);
+      } else {
+        result.push(`Enemy ${index} Shield: ${enemy.shield}/${ENEMY_SHIELD_MAX}`);
+      }
+    });
+    console.log(result.join('\n'));
   };
 
   const createEnemy = (level) => {
@@ -72,29 +78,31 @@ const updateState = ({action, state, appendMessage}) => {
     }
   };
 
-  const applyEnemyDamage = (localState, amount) => {
-    if (amount >= localState.enemy.shield) {
-      localState.enemy.defeated = true;
-      localState.enemy.shield = 0;
+  const applyEnemyDamage = (enemy, amount) => {
+    if (amount >= enemy.shield) {
+      enemy.defeated = true;
+      enemy.shield = 0;
     } else {
-      localState.enemy.shield = localState.enemy.shield - amount;
-      console.assert(localState.enemy.shield > 0);
+      enemy.shield = enemy.shield - amount;
+      console.assert(enemy.shield > 0);
     }
   };
 
   const enemyAttack = (localState) => {
-    const enemyDamage = weaponAttackDamage(localState.enemy.weapon);
-    applyPlayerDamage(localState, enemyDamage);
+    // Again, for now
+    const enemy = localState.enemies[0];
+    const enemyDamage = weaponAttackDamage(enemy.weapon);
+    applyPlayerDamage(localState.player, enemyDamage);
     appendMessage(`Enemy attacks for ${enemyDamage} damage!`);
-    printStatus(localState);
+    debugPrintStatus();
     if (localState.player.defeated) {
       appendMessage(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
       appendMessage("Click Restart to start a new game.");
       localState.gameScene = GameScene.MENU_SCENE;
     } else {
-      rechargePlayerShield(localState, PLAYER_BASE_SHIELD_RECHARGE);
+      rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
       appendMessage(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
-      printStatus(localState);
+      debugPrintStatus();
     }
   };
 
@@ -102,14 +110,14 @@ const updateState = ({action, state, appendMessage}) => {
     return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
   };
 
-  const applyPlayerDamage = (localState, amount) => {
-    if (amount >= localState.player.shield) {
-      localState.player.defeated = true
-      localState.player.shield = 0;
+  const applyPlayerDamage = (player, amount) => {
+    if (amount >= player.shield) {
+      player.defeated = true
+      player.shield = 0;
     } else {
-      const newShieldAmount = localState.player.shield - amount;
-      localState.player.shield = newShieldAmount;
-      console.assert(localState.player.shield > 0);
+      const newShieldAmount = player.shield - amount;
+      player.shield = newShieldAmount;
+      console.assert(player.shield > 0);
     }
   };
 
@@ -120,14 +128,24 @@ const updateState = ({action, state, appendMessage}) => {
       state.gameScene = GameScene.MENU_SCENE;
       initGame(state);
       appendMessage("Started a new game.");
-      printStatus(state);
+      debugPrintStatus();
     } else if (action === MenuSceneAction.BATTLE) {
       if (state.player.defeated) {
         appendMessage("Player was defeated. Click Restart to start a new game.");
       } else {
-        state.enemy = createEnemy(state.enemy === null ? 1 : state.enemy.level + 1);
+        state.enemies = [
+          undefined,
+          undefined,
+          undefined
+        ].map((_, index) => {
+          if (state.enemies.length === 0) {
+            return createEnemy(1);
+          } else {
+            return createEnemy(state.enemies[0].level + 1);
+          }
+        });
         state.gameScene = GameScene.BATTLE_SCENE;
-        printStatus(state);
+        debugPrintStatus();
       }
     } else {
       // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
@@ -139,14 +157,16 @@ const updateState = ({action, state, appendMessage}) => {
     } else if (action === BattleSceneAction.ATTACK_STEP_2) {
       state.attackStep2 = false;
       const damage = weaponAttackDamage(state.player.weapon);
-      applyEnemyDamage(state, damage);
+      // For now
+      const enemy = state.enemies[0];
+      applyEnemyDamage(enemy, damage);
       appendMessage(`Player attacks for ${damage} damage!`);
-      if (state.enemy.defeated) {
-        printStatus(state);
+      if (enemy.defeated) {
+        debugPrintStatus();
         appendMessage("Enemy defeated!");
         state.enemiesDefeated = state.enemiesDefeated + 1;
-        const rechargeBonus = 5 + Math.floor(state.enemy.level / 5);
-        rechargePlayerShield(state, rechargeBonus);
+        const rechargeBonus = 5 + Math.floor(enemy.level / 5);
+        rechargePlayerShield(state.player, rechargeBonus);
         appendMessage(
           `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
         );
@@ -156,7 +176,7 @@ const updateState = ({action, state, appendMessage}) => {
       }
     } else if (action === BattleSceneAction.SHIELD) {
       const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
-      rechargePlayerShield(state, recharge);
+      rechargePlayerShield(state.player, recharge);
       appendMessage(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
       enemyAttack(state);
     } else if (action === BattleSceneAction.CONCEDE) {
