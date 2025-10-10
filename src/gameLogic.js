@@ -89,21 +89,21 @@ const updateState = ({action, state, appendMessage}) => {
   };
 
   const enemyAttack = (localState) => {
-    // Again, for now
-    const enemy = localState.enemies[0];
-    const enemyDamage = weaponAttackDamage(enemy.weapon);
-    applyPlayerDamage(localState.player, enemyDamage);
-    appendMessage(`Enemy attacks for ${enemyDamage} damage!`);
-    debugPrintStatus();
-    if (localState.player.defeated) {
-      appendMessage(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-      appendMessage("Click Restart to start a new game.");
-      localState.gameScene = GameScene.MENU_SCENE;
-    } else {
-      rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
-      appendMessage(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
+    for (const enemy of localState.enemies) {
+      const enemyDamage = weaponAttackDamage(enemy.weapon);
+      applyPlayerDamage(localState.player, enemyDamage);
+      appendMessage(`Enemy attacks for ${enemyDamage} damage!`);
       debugPrintStatus();
-    }
+      if (localState.player.defeated) {
+        appendMessage(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
+        appendMessage("Click Restart to start a new game.");
+        localState.gameScene = GameScene.MENU_SCENE;
+        return;
+      }
+    };
+    rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
+    appendMessage(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
+    debugPrintStatus();
   };
 
   const weaponAttackDamage = (weapon) => {
