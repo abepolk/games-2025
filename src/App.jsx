@@ -214,7 +214,7 @@ const RPGInterface = () => {
                     attackable={gameState.attackStep2}
                     current={enemy.shield}
                     max={ENEMY_SHIELD_MAX}
-                    label="Enemy Health"
+                    label={`Enemy ${enemy.enemyNum} Health`}
                     color="bg-red-800"
                   />
                 ))}

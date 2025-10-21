@@ -22,8 +22,10 @@ const BattleSceneAction = Object.freeze({
 });
 
 const initGame = (state) => {
+  // A counter for enemies that lets us refer to them
+  state.enemyNum = 0;
   state.player = {
-    shield: 10,
+    shield: 25,
     defeated: false,
     weapon: {
       baseDamage: 3,
@@ -31,13 +33,10 @@ const initGame = (state) => {
       bonusDamageMax: 2
     }
   };
-  // state.enemy = null;
-  // Currently unused
   state.enemies = []
   state.enemiesDefeated = 0;
   state.battlesWon = 0;
   state.attackStep2 = false;
-
 };
 
 const updateState = ({action, state, appendMessage, options}) => {
@@ -66,7 +65,9 @@ const updateState = ({action, state, appendMessage, options}) => {
   };
 
   const createEnemy = (level) => {
+    state.enemyNum++;
     return {
+      enemyNum: state.enemyNum,
       level,
       weapon: {
         baseDamage: level,
@@ -137,13 +138,7 @@ const updateState = ({action, state, appendMessage, options}) => {
           undefined,
           undefined,
           undefined
-        ].map((_, index) => {
-          if (state.enemies.length === 0) {
-            return createEnemy(1);
-          } else {
-            return createEnemy(state.enemies[0].level + 1);
-          }
-        });
+        ].map((_, index) => createEnemy(state.battlesWon));
         state.gameScene = GameScene.BATTLE_SCENE;
         debugPrintStatus();
       }
@@ -157,19 +152,24 @@ const updateState = ({action, state, appendMessage, options}) => {
     } else if (action === BattleSceneAction.ATTACK_STEP_2) {
       state.attackStep2 = false;
       const damage = weaponAttackDamage(state.player.weapon);
-      console.assert(options.attackedEnemyIndex !== undefined);
-      const enemy = state.enemies[options.attackedEnemyIndex];
+      const attackedEnemyIndex = options.attackedEnemyIndex
+      console.assert(attackedEnemyIndex !== undefined);
+      const enemy = state.enemies[attackedEnemyIndex];
       applyEnemyDamage(enemy, damage);
       appendMessage(`Player attacks for ${damage} damage!`);
       if (enemy.defeated) {
         debugPrintStatus();
-        appendMessage("Enemy defeated!");
+        appendMessage(`Enemy ${enemy.enemyNum} defeated!`);
         state.enemiesDefeated = state.enemiesDefeated + 1;
+        state.enemies.splice(attackedEnemyIndex, 1);
+      }
+      if (state.enemies.length === 0) {
         const rechargeBonus = 5 + Math.floor(enemy.level / 5);
         rechargePlayerShield(state.player, rechargeBonus);
         appendMessage(
           `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
         );
+        state.battlesWon++;
         state.gameScene = GameScene.MENU_SCENE;
       } else {
         enemyAttack(state);
