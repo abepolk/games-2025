@@ -21,9 +21,10 @@ const RPGInterface = () => {
 
   const messagesBottom = useRef(null);
 
-  const [gameState, setGameState] = useState(
-    { gameScene: GameScene.MENU_SCENE }
-  );
+  const [gameState, setGameState] = useState({
+    gameScene: GameScene.MENU_SCENE,
+    messages: []
+  });
 
   useEffect(() => {
     setGameState((prevState) => {
@@ -34,26 +35,21 @@ const RPGInterface = () => {
   }, []);
 
 
-  useEffect(() => {
-    if (messagesBottom.current) {
-      messagesBottom.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+  useEffect(() => setMessages(gameState.messages), [gameState]);
 
-  const appendMessage = (message) => {
-    setMessages(messages => [...messages, message]);
-  };
+  useEffect(() => {
+    messagesBottom.current.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleAction = (action, options) => {
     setGameState((prevState) => {
+    const state = structuredClone(prevState);
       try {
-        const state = structuredClone(prevState);
-        return updateState({action, state, appendMessage, options});
+        return updateState({action, state, options});
       } catch (error) {
         console.error(error);
-        appendMessage(error);
-        // Leave state unchanged if there's an error
-        return structuredClone(prevState);
+        state.messages.push(error);
+        return state;
       }
     });
   };
@@ -180,7 +176,7 @@ const RPGInterface = () => {
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
           <div className="p-4 overflow-y-scroll space-y-3">
-            {messages.map((message, index) => (
+            {messages && messages.map((message, index) => (
               <div
                 key={index}
                 className="text-gray-300 leading-relaxed"

@@ -39,7 +39,7 @@ const initGame = (state) => {
   state.attackStep2 = false;
 };
 
-const updateState = ({action, state, appendMessage, options}) => {
+const updateState = ({action, state, options}) => {
 
   const rechargePlayerShield = (player, amount) => {
     player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
@@ -93,17 +93,17 @@ const updateState = ({action, state, appendMessage, options}) => {
     for (const enemy of localState.enemies) {
       const enemyDamage = weaponAttackDamage(enemy.weapon);
       applyPlayerDamage(localState.player, enemyDamage);
-      appendMessage(`Enemy attacks for ${enemyDamage} damage!`);
+      localState.messages.push(`Enemy attacks for ${enemyDamage} damage!`);
       debugPrintStatus();
       if (localState.player.defeated) {
-        appendMessage(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-        appendMessage("Click Restart to start a new game.");
+        localState.messages.push(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
+        localState.messages.push("Click Restart to start a new game.");
         localState.gameScene = GameScene.MENU_SCENE;
         return;
       }
     };
     rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
-    appendMessage(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
+    localState.messages.push(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
     debugPrintStatus();
   };
 
@@ -128,11 +128,11 @@ const updateState = ({action, state, appendMessage, options}) => {
     } else if (action === MenuSceneAction.RESTART) {
       state.gameScene = GameScene.MENU_SCENE;
       initGame(state);
-      appendMessage("Started a new game.");
+      state.messages.push("Started a new game.");
       debugPrintStatus();
     } else if (action === MenuSceneAction.BATTLE) {
       if (state.player.defeated) {
-        appendMessage("Player was defeated. Click Restart to start a new game.");
+        state.messages.push("Player was defeated. Click Restart to start a new game.");
       } else {
         state.enemies = [
           undefined,
@@ -156,17 +156,17 @@ const updateState = ({action, state, appendMessage, options}) => {
       console.assert(attackedEnemyIndex !== undefined);
       const enemy = state.enemies[attackedEnemyIndex];
       applyEnemyDamage(enemy, damage);
-      appendMessage(`Player attacks for ${damage} damage!`);
+      state.messages.push(`Player attacks for ${damage} damage!`);
       if (enemy.defeated) {
         debugPrintStatus();
-        appendMessage(`Enemy ${enemy.enemyNum} defeated!`);
+        state.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
         state.enemiesDefeated = state.enemiesDefeated + 1;
         state.enemies.splice(attackedEnemyIndex, 1);
       }
       if (state.enemies.length === 0) {
         const rechargeBonus = 5 + Math.floor(enemy.level / 5);
         rechargePlayerShield(state.player, rechargeBonus);
-        appendMessage(
+        state.messages.push(
           `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
         );
         state.battlesWon++;
@@ -177,11 +177,11 @@ const updateState = ({action, state, appendMessage, options}) => {
     } else if (action === BattleSceneAction.SHIELD) {
       const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
       rechargePlayerShield(state.player, recharge);
-      appendMessage(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
+      state.messages.push(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
       enemyAttack(state);
     } else if (action === BattleSceneAction.CONCEDE) {
-      appendMessage(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
-      appendMessage("Click Restart to start a new game.");
+      state.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
+      state.messages.push("Click Restart to start a new game.");
       state.player.defeated = true;
       state.gameScene = GameScene.MENU_SCENE;
     }
