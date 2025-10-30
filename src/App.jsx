@@ -54,7 +54,12 @@ const RPGInterface = () => {
     });
   };
 
-  const HealthBar = ({ attackable, current, max, label, color, index }) => (
+  const HealthBar = ({ attackable, current, max, label, color, index }) => {
+      useEffect(() => {
+        console.log("HealthBar mounted");
+        return () => console.log("HealthBar unmounted");
+      });
+      return (
     <div className="flex">
       {attackable && (
         <div className="bg-gray-600
@@ -85,6 +90,7 @@ const RPGInterface = () => {
       </div>
     </div>
   );
+};
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -189,6 +195,13 @@ const RPGInterface = () => {
             <div ref={messagesBottom}></div>
           </div>
         </div>
+
+        {/* Temporary test */}
+          <div
+            className={`h-3 rounded-full transition-all duration-300 bg-green-500`}
+            style={{ width: `${(gameState.player.shield / PLAYER_SHIELD_MAX) * 100}%` }}
+          />
+
 
         {/* Health Bars */}
         {
