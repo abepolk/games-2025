@@ -21,9 +21,11 @@ const HealthBar = ({ attackable, current, max, label, color, index, handleAction
         flex
         flex-col
         justify-center"
-        onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_2, {
-          attackedEnemyIndex: index
-        }); }}
+        onClick={() => {
+          handleAction(BattleSceneAction.ATTACK_STEP_2, {
+            attackedEnemyIndex: index
+          });
+        }}
       >
         Select
       </div>
@@ -60,7 +62,7 @@ const RPGInterface = () => {
   useEffect(() => {
     setGameState((prevState) => {
       const localState = structuredClone(prevState);
-      initGame(localState);
+      initGame(localState, 0x1234321);
       return localState;
     })
   }, []);
@@ -74,11 +76,12 @@ const RPGInterface = () => {
 
   const handleAction = (action, options) => {
     setGameState((prevState) => {
-    const state = structuredClone(prevState);
       try {
-        return updateState({action, state, options});
+        const state = structuredClone(prevState);
+        return updateState({ action, state, options });
       } catch (error) {
         console.error(error);
+        const state = structuredClone(prevState);
         state.messages.push(error);
         return state;
       }

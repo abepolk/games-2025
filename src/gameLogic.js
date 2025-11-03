@@ -21,7 +21,7 @@ const BattleSceneAction = Object.freeze({
   CONCEDE: "CONCEDE"
 });
 
-const initGame = (state) => {
+const initGame = (state, random_seed) => {
   // A counter for enemies that lets us refer to them
   state.enemyNum = 0;
   state.player = {
@@ -37,9 +37,24 @@ const initGame = (state) => {
   state.enemiesDefeated = 0;
   state.battlesWon = 0;
   state.attackStep2 = false;
+  state.current_seed = random_seed;
 };
 
-const updateState = ({action, state, options}) => {
+const updateState = ({ action, state, options }) => {
+
+  const mulberry32 = (a) => {
+    const updated_seed = a + 0x6D2B79F5;
+    var t = updated_seed;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return { value: ((t ^ t >>> 14) >>> 0) / 4294967296, updated_seed };
+  }
+
+  const random_with_seed_state_update = (state) => {
+    const { value, updated_seed } = mulberry32(state.current_seed);
+    state.current_seed = updated_seed;
+    return value;
+  }
 
   const rechargePlayerShield = (player, amount) => {
     player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
@@ -108,7 +123,7 @@ const updateState = ({action, state, options}) => {
   };
 
   const weaponAttackDamage = (weapon) => {
-    return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
+    return weapon.baseDamage + Math.floor(random_with_seed_state_update(state) * weapon.bonusDamageMax) + weapon.bonusDamageMin;
   };
 
   const applyPlayerDamage = (player, amount) => {
@@ -127,7 +142,7 @@ const updateState = ({action, state, options}) => {
       throw "Saving not implemented yet.";
     } else if (action === MenuSceneAction.RESTART) {
       state.gameScene = GameScene.MENU_SCENE;
-      initGame(state);
+      initGame(state, state.current_seed);
       state.messages.push("Started a new game.");
       debugPrintStatus();
     } else if (action === MenuSceneAction.BATTLE) {
