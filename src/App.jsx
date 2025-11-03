@@ -11,6 +11,43 @@ import {
   updateState
 } from './gameLogic.js'
 
+const HealthBar = ({ attackable, current, max, label, color, index, handleAction }) => {
+    useEffect(() => {
+      console.log("HealthBar mounted");
+      return () => console.log("HealthBar unmounted");
+    });
+    return (
+  <div className="flex">
+    {attackable && (
+      <div className="bg-gray-600
+        rounded-lg
+        px-4
+        mr-4
+        flex
+        flex-col
+        justify-center"
+        onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_2, {
+          attackedEnemyIndex: index
+        }); }}
+      >
+        Select
+      </div>
+    )}
+    <div className="grow">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-300">{label}</span>
+        <span className="text-sm text-gray-400">{current}/{max}</span>
+      </div>
+      <div className="w-full bg-gray-700 rounded-full h-3">
+        <div
+          className={`h-3 rounded-full transition-all duration-300 ${color}`}
+          style={{ width: `${(current / max) * 100}%` }}
+        />
+      </div>
+    </div>
+  </div>
+);
+};
 
 
 const RPGInterface = () => {
@@ -53,38 +90,6 @@ const RPGInterface = () => {
       }
     });
   };
-
-  const HealthBar = ({ attackable, current, max, label, color, index }) => (
-    <div className="flex">
-      {attackable && (
-        <div className="bg-gray-600
-          rounded-lg
-          px-4
-          mr-4
-          flex
-          flex-col
-          justify-center"
-          onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_2, {
-            attackedEnemyIndex: index
-          }); }}
-        >
-          Select
-        </div>
-      )}
-      <div className="grow">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-300">{label}</span>
-          <span className="text-sm text-gray-400">{current}/{max}</span>
-        </div>
-        <div className="w-full bg-gray-700 rounded-full h-3">
-          <div
-            className={`h-3 rounded-full transition-all duration-300 ${color}`}
-            style={{ width: `${(current / max) * 100}%` }}
-          />
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -200,6 +205,7 @@ const RPGInterface = () => {
                   max={PLAYER_SHIELD_MAX}
                   label="Player Health"
                   color="bg-green-500"
+                  handleAction={handleAction}
                 />
               </div>
               <div className="bg-gray-800 rounded-lg p-4 space-y-4">
@@ -212,6 +218,7 @@ const RPGInterface = () => {
                     max={ENEMY_SHIELD_MAX}
                     label={`Enemy ${enemy.enemyNum} Health`}
                     color="bg-red-800"
+                    handleAction={handleAction}
                   />
                 ))}
               </div>
