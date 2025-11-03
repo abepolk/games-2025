@@ -11,12 +11,7 @@ import {
   updateState
 } from './gameLogic.js'
 
-const HealthBar = ({ attackable, current, max, label, color, index, handleAction }) => {
-    useEffect(() => {
-      console.log("HealthBar mounted");
-      return () => console.log("HealthBar unmounted");
-    });
-    return (
+const HealthBar = ({ attackable, current, max, label, color, index, handleAction }) => (
   <div className="flex">
     {attackable && (
       <div className="bg-gray-600
@@ -47,7 +42,6 @@ const HealthBar = ({ attackable, current, max, label, color, index, handleAction
     </div>
   </div>
 );
-};
 
 
 const RPGInterface = () => {
