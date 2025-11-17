@@ -120,7 +120,7 @@ const updateState = ({ action, state, options }) => {
     for (const enemy of localState.enemies) {
       const enemyDamage = weaponAttackDamage(enemy.weapon);
       applyPlayerDamage(localState.player, enemyDamage);
-      localState.messages.push(`Enemy attacks for ${enemyDamage} damage!`);
+      localState.messages.push(`Enemy ${enemy.enemyNum} attacks for ${enemyDamage} damage!`);
       debugPrintStatus();
       if (localState.player.defeated) {
         localState.messages.push(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
@@ -165,7 +165,7 @@ const updateState = ({ action, state, options }) => {
           undefined,
           undefined,
           undefined
-        ].map((_, index) => createEnemy(state.battlesWon));
+        ].map(_ => createEnemy(state.battlesWon));
         state.gameScene = GameScene.BATTLE_SCENE;
         debugPrintStatus();
       }
@@ -189,6 +189,12 @@ const updateState = ({ action, state, options }) => {
         state.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
         state.enemiesDefeated = state.enemiesDefeated + 1;
         state.enemies.splice(attackedEnemyIndex, 1);
+        if (state.enemies.length > 0) {
+          const weaponForTransfer = enemy.weapon;
+          const weaponRecipient = state.enemies[Math.floor(Math.random() * state.enemies.length)];
+          weaponRecipient.weapon.baseDamage = weaponRecipient.weapon.baseDamage + weaponForTransfer.baseDamage;
+          state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s weapon and used it to superpower their other weapon!`);
+        }
       }
       if (state.enemies.length === 0) {
         const rechargeBonus = 5 + Math.floor(enemy.level / 5);
