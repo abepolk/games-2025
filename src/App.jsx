@@ -79,7 +79,7 @@ const RPGInterface = () => {
         return updateState({action, state, options});
       } catch (error) {
         console.error(error);
-        state.messages.push(error);
+        state.messages.push(`Error: ${error}`);
         return state;
       }
     });

@@ -1,4 +1,6 @@
-const PLAYER_SHIELD_MAX = 100;
+import { selectRandomElement } from "./utils";
+
+const PLAYER_SHIELD_MAX = 500;
 const PLAYER_BASE_SHIELD_RECHARGE = 2;
 
 const ENEMY_SHIELD_MAX = 20;
@@ -21,11 +23,38 @@ const BattleSceneAction = Object.freeze({
   CONCEDE: "CONCEDE"
 });
 
+const WeaponKind = Object.freeze({
+  DAGGER: "DAGGER",
+  STICK: "STICK",
+  SPEAR: "SPEAR"
+});
+
+const weapons = [
+  {
+    kind: WeaponKind.DAGGER,
+    strength: 2,
+    name: "dagger",
+    namePlural: "daggers"
+  },
+  {
+    kind: WeaponKind.STICK,
+    strength: 2,
+    name: "stick",
+    namePlural: "sticks"
+  },
+  {
+    kind: WeaponKind.SPEAR,
+    strength: 7,
+    name: "spear",
+    namePlural: "spears"
+  }
+];
+
 const initGame = (state) => {
   // A counter for enemies that lets us refer to them
   state.enemyNum = 0;
   state.player = {
-    shield: 25,
+    shield: PLAYER_SHIELD_MAX,
     defeated: false,
     weapon: {
       baseDamage: 3,
@@ -64,16 +93,30 @@ const updateState = ({ action, state, options }) => {
     console.log(result.join('\n'));
   };
 
-  const createEnemy = (level) => {
+  const createWeapon = (level, kind) => {
+    // Need to make spear damage value not get multiplied by zero
+    // TODO level needs to be conceptually separated from battles won
+    const baseDamage = (level + 1) * weapons.find(weapon => weapon.kind === kind).strength;
+    const bonusDamageMin = 1 + Math.floor(level / 10);
+    const bonusDamageMax = 2 + Math.floor(level / 5);
+    const name = weapons.find(weapon => weapon.kind === kind).name;
+    const namePlural = weapons.find(weapon => weapon.kind === kind).namePlural;
+    return {
+      kind,
+      baseDamage,
+      bonusDamageMin,
+      bonusDamageMax,
+      name,
+      namePlural
+    };
+  };
+
+  const createEnemy = (level, kind) => {
     state.enemyNum++;
     return {
       enemyNum: state.enemyNum,
       level,
-      weapon: {
-        baseDamage: level,
-        bonusDamageMin: 1 + Math.floor(level / 10),
-        bonusDamageMax: 2 + Math.floor(level / 5),
-      },
+      weapon: createWeapon(level, kind),
       shield: 10,
       defeated: false
     }
@@ -120,7 +163,7 @@ const updateState = ({ action, state, options }) => {
     for (const enemy of localState.enemies) {
       const enemyDamage = weaponAttackDamage(enemy.weapon);
       applyPlayerDamage(localState.player, enemyDamage);
-      localState.messages.push(`Enemy ${enemy.enemyNum} attacks for ${enemyDamage} damage!`);
+      localState.messages.push(`Enemy ${enemy.enemyNum} attacks with its ${enemy.weapon.name} for ${enemyDamage} damage!`);
       debugPrintStatus();
       if (localState.player.defeated) {
         localState.messages.push(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
@@ -161,11 +204,15 @@ const updateState = ({ action, state, options }) => {
       if (state.player.defeated) {
         state.messages.push("Player was defeated. Click Restart to start a new game.");
       } else {
+        const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
         state.enemies = [
           undefined,
           undefined,
           undefined
-        ].map(_ => createEnemy(state.battlesWon));
+        ].map(_ => {
+          const weapon = selectRandomElement(initialWeapons);
+          return createEnemy(state.battlesWon, weapon);
+        });
         state.gameScene = GameScene.BATTLE_SCENE;
         debugPrintStatus();
       }
@@ -191,9 +238,25 @@ const updateState = ({ action, state, options }) => {
         state.enemies.splice(attackedEnemyIndex, 1);
         if (state.enemies.length > 0) {
           const weaponForTransfer = enemy.weapon;
-          const weaponRecipient = state.enemies[Math.floor(Math.random() * state.enemies.length)];
-          weaponRecipient.weapon.baseDamage = weaponRecipient.weapon.baseDamage + weaponForTransfer.baseDamage;
-          state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s weapon and used it to superpower their other weapon!`);
+          var compatibleWeapon;
+          if (enemy.weapon.kind === WeaponKind.DAGGER) {
+            compatibleWeapon = WeaponKind.STICK;
+          } else if (enemy.weapon.kind === WeaponKind.STICK) {
+            compatibleWeapon = WeaponKind.DAGGER;
+          } else if (enemy.weapon.kind === WeaponKind.SPEAR) {
+            compatibleWeapon = null;
+          } else {
+            throw "Weapon kind not found when looking for a compatible weapon";
+          }
+          const enemiesCanTransfer = state.enemies.filter(enemy => {
+            return enemy.weapon.kind === compatibleWeapon;
+          });
+          if (enemiesCanTransfer.length > 0) {
+            const weaponRecipient = selectRandomElement(enemiesCanTransfer);
+            const oldWeapon = weaponRecipient.weapon;
+            weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
+            state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
+          }
         }
       }
       if (state.enemies.length === 0) {
