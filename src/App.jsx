@@ -21,9 +21,11 @@ const HealthBar = ({ attackable, current, max, label, color, index, handleAction
         flex
         flex-col
         justify-center"
-        onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_2, {
-          attackedEnemyIndex: index
-        }); }}
+        onClick={() => {
+          handleAction(BattleSceneAction.ATTACK_STEP_2, {
+            attackedEnemyIndex: index
+          });
+        }}
       >
         Select
       </div>
@@ -76,7 +78,7 @@ const RPGInterface = () => {
     setGameState((prevState) => {
       const state = structuredClone(prevState);
       try {
-        return updateState({action, state, options});
+        return updateState({ action, state, options });
       } catch (error) {
         console.error(error);
         state.messages.push(`Error: ${error}`);
@@ -174,7 +176,7 @@ const RPGInterface = () => {
           <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
-          <div className="p-4 overflow-y-scroll space-y-3">
+          <div className="p-4 overflow-y-scroll">
             {messages && messages.map((message, index) => (
               <div
                 key={index}
