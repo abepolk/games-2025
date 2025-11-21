@@ -117,37 +117,10 @@ const updateState = ({ action, state, options }) => {
       enemyNum: state.enemyNum,
       level,
       weapon: createWeapon(level, kind),
-      shield: 10,
+      shield: ENEMY_SHIELD_MAX,
       defeated: false
     }
   };
-
-  // how do we make enemies get stronger
-
-  // Discussed levels of explaining what's happening
-  // * leaned toward saying that the enemies got stronger when their allies are defeated but not saying exactly what the mechanics are
-  // * Flavor has a few options: creatures that consume fallen allies, gets angry and thus stronger when ally defeated, or picks up weapons
-  // 	* picks up weapons was our favorite
-
-  // Decided we wanted to have enemies that were all identical at first
-  // but then change when their allies are defeated
-
-  // stabs with dagger
-  // hits with stick
-  // assembles dagger and stick into a spear and stabs with spear
-
-  // but first let's do
-  //  when an enemy is defeated, we pick a remaining enemy and add
-  //  the defeated enemy's weapon strength to its weapon strength,
-  //  plus a bonus.
-  // We have a message that says the name of the enemy and that it combined
-  //  its fallen ally's weapon with its own to become stronger
-
-  // Later we can have more complex logic where enemies start with
-  //  kind A or B (e.g. dagger and stick) and when an enemy is defeated,
-  //  we find an enemy with the opposite kind of weapon and combine them
-  //  into a more powerful weapon, e.g. a spear
-
 
   const applyEnemyDamage = (enemy, amount) => {
     if (amount >= enemy.shield) {
