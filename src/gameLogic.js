@@ -196,8 +196,10 @@ const updateState = ({ action, state, options }) => {
   } else if (state.gameScene === GameScene.BATTLE_SCENE) {
     if (action === BattleSceneAction.ATTACK_STEP_1) {
       state.attackStep2 = true;
-    } else if (action === BattleSceneAction.ATTACK_STEP_2) {
+    } else {
       state.attackStep2 = false;
+    }
+    if (action === BattleSceneAction.ATTACK_STEP_2) {
       const damage = weaponAttackDamage(state.player.weapon);
       const attackedEnemyIndex = options.attackedEnemyIndex
       console.assert(attackedEnemyIndex !== undefined);
