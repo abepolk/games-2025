@@ -8,7 +8,7 @@ import {
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   initGame,
-  updateState
+  step
 } from './gameLogic.js'
 
 const HealthBar = ({ attackable, current, max, label, color, index, handleAction }) => (
@@ -73,16 +73,32 @@ const RPGInterface = () => {
   }, [messages]);
 
   const handleAction = (action, options) => {
-    setGameState((prevState) => {
-      const state = structuredClone(prevState);
-      try {
-        return updateState({action, state, options});
-      } catch (error) {
-        console.error(error);
+    var currentState = structuredClone(gameState);
+    const randoms = [];
+    var stepResult;
+    try {
+      while (!stepResult || !stepResult.completed) {
+        stepResult = step({state: currentState, randoms, action, options });
+        currentState = stepResult.state;
+        if (!stepResult.completed) {
+          // console.log(randoms);
+          randoms.push(Math.random());
+          // console.log(randoms);
+          // console.log('logged');
+        }
+      }
+      setGameState((prevState) => {
+        const state = structuredClone(prevState);
+        return step({ state, randoms, action, options}).state;
+      });
+    } catch (error) {
+      console.error(error);
+      setGameState((prevState) => {
+        const state = structuredClone(prevState);
         state.messages.push(`Error: ${error}`);
         return state;
-      }
-    });
+      })
+    }
   };
 
   return (

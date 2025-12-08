@@ -68,13 +68,29 @@ const initGame = (state) => {
   state.attackStep2 = false;
 };
 
-const updateState = ({ action, state, options }) => {
+const step = ({ action, state, options, randoms }) => {
+  console.log('step');
+  const remainingRandoms = [...randoms];
+
+  var completed = true;
+
+  const getRandom = () => {
+    console.log('getRandom');
+    console.log(remainingRandoms);
+    if (remainingRandoms.length === 0) {
+      completed = false;
+      return 0;
+    } else {
+      return remainingRandoms.shift();
+    }
+  };
 
   const rechargePlayerShield = (player, amount) => {
     player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
   };
 
   const debugPrintStatus = () => {
+    return;
     const result = [`Player Shield: ${state.player.shield}/${PLAYER_SHIELD_MAX}`];
     if (state.enemies.length === 0) {
       console.log("No enemies present");
@@ -151,7 +167,7 @@ const updateState = ({ action, state, options }) => {
   };
 
   const weaponAttackDamage = (weapon) => {
-    return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
+    return weapon.baseDamage + Math.floor(getRandom() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
   };
 
   const applyPlayerDamage = (player, amount) => {
@@ -183,7 +199,7 @@ const updateState = ({ action, state, options }) => {
           undefined,
           undefined
         ].map(_ => {
-          const weapon = selectRandomElement(initialWeapons);
+          const weapon = selectRandomElement(initialWeapons, getRandom);
           return createEnemy(state.battlesWon, weapon);
         });
         state.gameScene = GameScene.BATTLE_SCENE;
@@ -227,7 +243,7 @@ const updateState = ({ action, state, options }) => {
             return enemy.weapon.kind === compatibleWeapon;
           });
           if (enemiesCanTransfer.length > 0) {
-            const weaponRecipient = selectRandomElement(enemiesCanTransfer);
+            const weaponRecipient = selectRandomElement(enemiesCanTransfer, getRandom);
             const oldWeapon = weaponRecipient.weapon;
             weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
             state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
@@ -259,7 +275,7 @@ const updateState = ({ action, state, options }) => {
   } else {
     throw `Unknown scene ${state.gameScene}`;
   }
-  return state;
+  return { completed, state };
 }
 
 export {
@@ -269,5 +285,5 @@ export {
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   initGame,
-  updateState
+  step
 };
