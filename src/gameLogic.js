@@ -84,9 +84,24 @@ const step = ({ action, state, options, randoms }) => {
       return remainingRandoms.shift();
     }
   };
+  
+  const nonReactSetValueInState = (value, setter) => {
+    if (completed) {
+      value = setter(value);
+    }
+  };
+
+  const assert = (condition) => {
+    if (completed) {
+      console.assert(condition);
+    }
+  };
 
   const rechargePlayerShield = (player, amount) => {
-    player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
+    nonReactSetValueInState(player, p => {
+      p.shield = Math.min(PLAYER_SHIELD_MAX, p.shield + amount);
+      return p;
+    });
   };
 
   const debugPrintStatus = () => {
@@ -128,7 +143,10 @@ const step = ({ action, state, options, randoms }) => {
   };
 
   const createEnemy = (level, kind) => {
-    state.enemyNum++;
+    nonReactSetValueInStateState(state, s => {
+      s.enemyNum++;
+      return s;
+    });
     return {
       enemyNum: state.enemyNum,
       level,
@@ -140,11 +158,20 @@ const step = ({ action, state, options, randoms }) => {
 
   const applyEnemyDamage = (enemy, amount) => {
     if (amount >= enemy.shield) {
-      enemy.defeated = true;
-      enemy.shield = 0;
+      nonReactSetValueInState(enemy, e => {
+        e.enemy.defeated = true;
+        return e;
+      });
+      nonReactSetValueInState(enemy, e => {
+        e.shield = 0;
+        return e;
+      });
     } else {
-      enemy.shield = enemy.shield - amount;
-      console.assert(enemy.shield > 0);
+      nonReactSetValueInState(enemy, e => {
+        e.shield = e.shield - amount;
+        return e;
+      });
+      assert(enemy.shield > 0);
     }
   };
 
@@ -152,17 +179,32 @@ const step = ({ action, state, options, randoms }) => {
     for (const enemy of localState.enemies) {
       const enemyDamage = weaponAttackDamage(enemy.weapon);
       applyPlayerDamage(localState.player, enemyDamage);
-      localState.messages.push(`Enemy ${enemy.enemyNum} attacks with its ${enemy.weapon.name} for ${enemyDamage} damage!`);
+      nonReactSetValueInState(localState, l => {
+        l.messages.push(`Enemy ${enemy.enemyNum} attacks with its ${enemy.weapon.name} for ${enemyDamage} damage!`);
+        return l;
+      });
       debugPrintStatus();
       if (localState.player.defeated) {
-        localState.messages.push(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-        localState.messages.push("Click Restart to start a new game.");
-        localState.gameScene = GameScene.MENU_SCENE;
+        nonReactSetValueInState(localState, l => {
+          l.messages.push(`Player defeated after winning ${l.enemiesDefeated} battles! Game Over.`);
+          return l;
+        });
+        nonReactSetValueInState(localState, l => {
+          l.messages.push("Click Restart to start a new game.");
+          return l;
+        });
+        nonReactSetValueInState(localState, l => {
+          l.gameScene = GameScene.MENU_SCENE;
+          return l;
+        });
         return;
       }
     };
     rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
-    localState.messages.push(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
+    nonReactSetValueInState(localState, l => {
+      l.messages.push(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${l.player.shield}/${PLAYER_SHIELD_MAX}`);
+      return l;
+    });
     debugPrintStatus();
   };
 
@@ -172,12 +214,21 @@ const step = ({ action, state, options, randoms }) => {
 
   const applyPlayerDamage = (player, amount) => {
     if (amount >= player.shield) {
-      player.defeated = true
-      player.shield = 0;
+      nonReactSetValueInState(player, p => {
+        p.defeated = true;
+        return p;
+      });
+      nonReactSetValueInState(player, p => {
+        p.shield = 0;
+        return p;
+      });
     } else {
       const newShieldAmount = player.shield - amount;
-      player.shield = newShieldAmount;
-      console.assert(player.shield > 0);
+      nonReactSetValueInState(player, p => {
+        p.shield = newShieldAmount;
+        return p;
+      });
+      assert(player.shield > 0);
     }
   };
 
@@ -185,24 +236,42 @@ const step = ({ action, state, options, randoms }) => {
     if (action === MenuSceneAction.SAVE) {
       throw "Saving not implemented yet.";
     } else if (action === MenuSceneAction.RESTART) {
-      state.gameScene = GameScene.MENU_SCENE;
-      initGame(state);
-      state.messages.push("Started a new game.");
+      nonReactSetValueInState(state, s => {
+        s.gameScene = GameScene.MENU_SCENE;
+        return s;
+      });
+      nonReactSetValueInState(state, s => {
+        initGame(s);
+        return s;
+      })
+      nonReactSetValueInState(state, s => {
+        s.messages.push("Started a new game");
+        return s;
+      });
       debugPrintStatus();
     } else if (action === MenuSceneAction.BATTLE) {
       if (state.player.defeated) {
-        state.messages.push("Player was defeated. Click Restart to start a new game.");
+        nonReactSetValueInState(state, s => {
+          s.messages.push("Player was defeated. Click Restart to start a new game.");
+          return s;
+        })
       } else {
         const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
-        state.enemies = [
-          undefined,
-          undefined,
-          undefined
-        ].map(_ => {
-          const weapon = selectRandomElement(initialWeapons, getRandom);
-          return createEnemy(state.battlesWon, weapon);
+        nonReactSetValueInState(state, s => {
+          s.enemies = [
+            undefined,
+            undefined,
+            undefined
+          ].map(_ => {
+            const weapon = selectRandomElement(initialWeapons, getRandom);
+            return createEnemy(s.battlesWon, weapon);
+          });
+          return s;
         });
-        state.gameScene = GameScene.BATTLE_SCENE;
+        nonReactSetValueInState(state, s => {
+          s.gameScene = GameScene.BATTLE_SCENE;
+          return s;
+        });
         debugPrintStatus();
       }
     } else {
@@ -211,22 +280,40 @@ const step = ({ action, state, options, randoms }) => {
     }
   } else if (state.gameScene === GameScene.BATTLE_SCENE) {
     if (action === BattleSceneAction.ATTACK_STEP_1) {
-      state.attackStep2 = true;
+      nonReactSetValueInState(state, s => {
+        s.attackStep2 = true;
+        return s;
+      })
     } else {
-      state.attackStep2 = false;
+      nonReactSetValueInState(state, s => {
+        s.attackStep2 = false;
+        return s;
+      });
     }
     if (action === BattleSceneAction.ATTACK_STEP_2) {
       const damage = weaponAttackDamage(state.player.weapon);
       const attackedEnemyIndex = options.attackedEnemyIndex
-      console.assert(attackedEnemyIndex !== undefined);
+      assert(attackedEnemyIndex !== undefined);
       const enemy = state.enemies[attackedEnemyIndex];
       applyEnemyDamage(enemy, damage);
-      state.messages.push(`Player attacks for ${damage} damage!`);
+      nonReactSetValueInState(state, s => {
+        s.messages.push(`Player attacks for ${damage} damage!`);
+        return s;
+      });
       if (enemy.defeated) {
         debugPrintStatus();
-        state.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
-        state.enemiesDefeated = state.enemiesDefeated + 1;
-        state.enemies.splice(attackedEnemyIndex, 1);
+        nonReactSetValueInState(state, s => {
+          s.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
+          return s;
+        });
+        nonReactSetValueInState(state, s => {
+          s.enemiesDefeated = state.enemiesDefeated + 1;
+          return s;
+        });
+        nonReactSetValueInState(state, s => {
+          s.enemies.splice(attackedEnemyIndex, 1);
+          return s;
+        });
         if (state.enemies.length > 0) {
           const weaponForTransfer = enemy.weapon;
           var compatibleWeapon;
@@ -245,33 +332,63 @@ const step = ({ action, state, options, randoms }) => {
           if (enemiesCanTransfer.length > 0) {
             const weaponRecipient = selectRandomElement(enemiesCanTransfer, getRandom);
             const oldWeapon = weaponRecipient.weapon;
-            weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
-            state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
+            nonReactSetValueInState(weaponRecipient, w => {
+              w.weapon = createWeapon(w.level, WeaponKind.SPEAR);
+              return w;
+            });
+            nonReactSetValueInState(state, s => {
+              s.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
+              return s;
+            });
           }
         }
       }
       if (state.enemies.length === 0) {
         const rechargeBonus = 5 + Math.floor(enemy.level / 5);
         rechargePlayerShield(state.player, rechargeBonus);
-        state.messages.push(
-          `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
-        );
-        state.battlesWon++;
-        state.gameScene = GameScene.MENU_SCENE;
+        nonReactSetValueInState(state, s => {
+          s.messages.push(
+            `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
+          );
+          return s;
+        });
+        nonReactSetValueInState(state, s => {
+          state.battlesWon++:
+          return s;
+        });
+        nonReactSetValueInState(state, s => {
+          state.gameScene = GameScene.MENU_SCENE;
+          return s;
+        });
       } else {
         enemyAttack(state);
       }
     } else if (action === BattleSceneAction.SHIELD) {
       const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
       rechargePlayerShield(state.player, recharge);
-      state.messages.push(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
+      nonReactSetValueInState(state, s => {
+        s.messages.push(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
+        return s;
+      });
       enemyAttack(state);
     } else if (action === BattleSceneAction.CONCEDE) {
-      state.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
-      state.messages.push("Click Restart to start a new game.");
-      state.player.defeated = true;
-      state.gameScene = GameScene.MENU_SCENE;
-    }
+      nonReactSetValueInState(state, s => {
+        s.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
+        return s;
+      });
+      nonReactSetValueInState(state, s => {
+        s.messages.push("Click Restart to start a new game.");
+        return s;
+      });
+      nonReactSetValueInState(state, s => {
+        s.player.defeated = true;
+        return s;
+      });
+      nonReactSetValueInState(state, s => {
+        s.gameScene = GameScene.MENU_SCENE;
+         return s;
+      });
+   }
   } else {
     throw `Unknown scene ${state.gameScene}`;
   }
