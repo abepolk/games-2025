@@ -78,6 +78,7 @@ const step = ({ action, oldState, options, randoms }) => {
   const getRandom = () => {
     if (remainingRandoms.length === 0) {
       completed = false;
+      // 0 is arbitrary - we just need a number so that we can exit `step` without throwing an error now that we know we didn't have enough random numbers
       return 0;
     } else {
       return remainingRandoms.shift();
