@@ -257,15 +257,16 @@ const step = ({ action, state, options, randoms }) => {
         })
       } else {
         const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
+        const enemies = [
+          undefined,
+          undefined,
+          undefined
+        ].map(_ => {
+          const weapon = selectRandomElement(initialWeapons, getRandom);
+          return createEnemy(s.battlesWon, weapon);
+        });
         nonReactSetValueInState(state, s => {
-          s.enemies = [
-            undefined,
-            undefined,
-            undefined
-          ].map(_ => {
-            const weapon = selectRandomElement(initialWeapons, getRandom);
-            return createEnemy(s.battlesWon, weapon);
-          });
+          s.enemies = enemies;
           return s;
         });
         nonReactSetValueInState(state, s => {
@@ -315,7 +316,6 @@ const step = ({ action, state, options, randoms }) => {
           return s;
         });
         if (state.enemies.length > 0) {
-          const weaponForTransfer = enemy.weapon;
           var compatibleWeapon;
           if (enemy.weapon.kind === WeaponKind.DAGGER) {
             compatibleWeapon = WeaponKind.STICK;
@@ -348,16 +348,16 @@ const step = ({ action, state, options, randoms }) => {
         rechargePlayerShield(state.player, rechargeBonus);
         nonReactSetValueInState(state, s => {
           s.messages.push(
-            `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
+            `Shield recharged by ${rechargeBonus} to ${s.player.shield}/${PLAYER_SHIELD_MAX}`
           );
           return s;
         });
         nonReactSetValueInState(state, s => {
-          state.battlesWon++:
+          s.battlesWon++:
           return s;
         });
         nonReactSetValueInState(state, s => {
-          state.gameScene = GameScene.MENU_SCENE;
+          s.gameScene = GameScene.MENU_SCENE;
           return s;
         });
       } else {
@@ -367,13 +367,13 @@ const step = ({ action, state, options, randoms }) => {
       const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
       rechargePlayerShield(state.player, recharge);
       nonReactSetValueInState(state, s => {
-        s.messages.push(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
+        s.messages.push(`Focusing the shield recharges by ${recharge} to ${s.player.shield}/${PLAYER_SHIELD_MAX}`);
         return s;
       });
       enemyAttack(state);
     } else if (action === BattleSceneAction.CONCEDE) {
       nonReactSetValueInState(state, s => {
-        s.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
+        s.messages.push(`Conceding. Player defeated after winning ${s.enemiesDefeated} battles! Game Over.`);
         return s;
       });
       nonReactSetValueInState(state, s => {
