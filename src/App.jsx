@@ -73,31 +73,23 @@ const RPGInterface = () => {
   }, [messages]);
 
   const handleAction = (action, options) => {
-    var currentState = structuredClone(gameState);
     const randoms = [];
     var stepResult;
     try {
       while (!stepResult || !stepResult.completed) {
-        stepResult = step({state: currentState, randoms, action, options });
-        currentState = stepResult.state;
+        stepResult = step({ oldState: gameState, randoms, action, options });
         if (!stepResult.completed) {
-          // console.log(randoms);
           randoms.push(Math.random());
-          // console.log(randoms);
-          // console.log('logged');
         }
       }
-      setGameState((prevState) => {
-        const state = structuredClone(prevState);
-        return step({ state, randoms, action, options}).state;
-      });
+      setGameState(prevState => step({ oldState: prevState, randoms, action, options }).state);
     } catch (error) {
       console.error(error);
       setGameState((prevState) => {
         const state = structuredClone(prevState);
         state.messages.push(`Error: ${error}`);
         return state;
-      })
+      });
     }
   };
 

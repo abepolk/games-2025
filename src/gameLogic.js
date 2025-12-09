@@ -68,15 +68,14 @@ const initGame = (state) => {
   state.attackStep2 = false;
 };
 
-const step = ({ action, state, options, randoms }) => {
-  console.log('step');
+const step = ({ action, oldState, options, randoms }) => {
+
+  const state = structuredClone(oldState);
   const remainingRandoms = [...randoms];
 
   var completed = true;
 
   const getRandom = () => {
-    console.log('getRandom');
-    console.log(remainingRandoms);
     if (remainingRandoms.length === 0) {
       completed = false;
       return 0;
@@ -143,7 +142,7 @@ const step = ({ action, state, options, randoms }) => {
   };
 
   const createEnemy = (level, kind) => {
-    nonReactSetValueInStateState(state, s => {
+    nonReactSetValueInState(state, s => {
       s.enemyNum++;
       return s;
     });
@@ -157,9 +156,9 @@ const step = ({ action, state, options, randoms }) => {
   };
 
   const applyEnemyDamage = (enemy, amount) => {
-    if (amount >= enemy.shield) {
+   if (amount >= enemy.shield) {
       nonReactSetValueInState(enemy, e => {
-        e.enemy.defeated = true;
+        e.defeated = true;
         return e;
       });
       nonReactSetValueInState(enemy, e => {
@@ -263,7 +262,7 @@ const step = ({ action, state, options, randoms }) => {
           undefined
         ].map(_ => {
           const weapon = selectRandomElement(initialWeapons, getRandom);
-          return createEnemy(s.battlesWon, weapon);
+          return createEnemy(state.battlesWon, weapon);
         });
         nonReactSetValueInState(state, s => {
           s.enemies = enemies;
@@ -337,7 +336,7 @@ const step = ({ action, state, options, randoms }) => {
               return w;
             });
             nonReactSetValueInState(state, s => {
-              s.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
+              s.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up Enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
               return s;
             });
           }
@@ -353,7 +352,7 @@ const step = ({ action, state, options, randoms }) => {
           return s;
         });
         nonReactSetValueInState(state, s => {
-          s.battlesWon++:
+          s.battlesWon++;
           return s;
         });
         nonReactSetValueInState(state, s => {
