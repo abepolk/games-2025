@@ -86,7 +86,7 @@ const step = ({ action, oldState, options, randoms }) => {
   };
 
   const rechargePlayerShield = (player, amount) => {
-    player.shield = Math.min(PLAYER_SHIELD_MAX, p.shield + amount);
+    player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
   };
 
   const debugPrintStatus = () => {
@@ -139,11 +139,11 @@ const step = ({ action, oldState, options, randoms }) => {
   };
 
   const applyEnemyDamage = (enemy, amount) => {
-   if (amount >= enemy.shield) {
+    if (amount >= enemy.shield) {
       enemy.defeated = true;
       enemy.shield = 0;
     } else {
-      enemy.shield = e.shield - amount;
+      enemy.shield = enemy.shield - amount;
       console.assert(enemy.shield > 0);
     }
   };
@@ -155,14 +155,14 @@ const step = ({ action, oldState, options, randoms }) => {
       localState.messages.push(`Enemy ${enemy.enemyNum} attacks with its ${enemy.weapon.name} for ${enemyDamage} damage!`);
       debugPrintStatus();
       if (localState.player.defeated) {
-        localState.messages.push(`Player defeated after winning ${l.enemiesDefeated} battles! Game Over.`);
+        localState.messages.push(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
         localState.messages.push("Click Restart to start a new game.");
         localState.gameScene = GameScene.MENU_SCENE;
         return;
       }
     };
     rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
-    localState.messages.push(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${l.player.shield}/${PLAYER_SHIELD_MAX}`);
+    localState.messages.push(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
     debugPrintStatus();
   };
 
@@ -174,7 +174,6 @@ const step = ({ action, oldState, options, randoms }) => {
     if (amount >= player.shield) {
       player.defeated = true;
       player.shield = 0;
-      return p;
     } else {
       const newShieldAmount = player.shield - amount;
       player.shield = newShieldAmount;
@@ -188,7 +187,7 @@ const step = ({ action, oldState, options, randoms }) => {
     } else if (action === MenuSceneAction.RESTART) {
       state.gameScene = GameScene.MENU_SCENE;
       initGame(state);
-      state.messages.push("Started a new game");
+      state.messages.push("Started a new game.");
       debugPrintStatus();
     } else if (action === MenuSceneAction.BATTLE) {
       if (state.player.defeated) {
@@ -245,7 +244,7 @@ const step = ({ action, oldState, options, randoms }) => {
           if (enemiesCanTransfer.length > 0) {
             const weaponRecipient = selectRandomElement(enemiesCanTransfer, getRandom);
             const oldWeapon = weaponRecipient.weapon;
-            weaponRecipien.weapon = createWeapon(w.level, WeaponKind.SPEAR);
+            weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
             state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up Enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
           }
         }
@@ -254,7 +253,7 @@ const step = ({ action, oldState, options, randoms }) => {
         const rechargeBonus = 5 + Math.floor(enemy.level / 5);
         rechargePlayerShield(state.player, rechargeBonus);
         state.messages.push(
-            `Shield recharged by ${rechargeBonus} to ${s.player.shield}/${PLAYER_SHIELD_MAX}`
+            `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
           );
         state.battlesWon++;
         state.gameScene = GameScene.MENU_SCENE;
@@ -264,10 +263,10 @@ const step = ({ action, oldState, options, randoms }) => {
     } else if (action === BattleSceneAction.SHIELD) {
       const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
       rechargePlayerShield(state.player, recharge);
-      state.messages.push(`Focusing the shield recharges by ${recharge} to ${s.player.shield}/${PLAYER_SHIELD_MAX}`);
+      state.messages.push(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
       enemyAttack(state);
     } else if (action === BattleSceneAction.CONCEDE) {
-      state.messages.push(`Conceding. Player defeated after winning ${s.enemiesDefeated} battles! Game Over.`);
+      state.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
       state.messages.push("Click Restart to start a new game.");
       state.player.defeated = true;
       state.gameScene = GameScene.MENU_SCENE;
