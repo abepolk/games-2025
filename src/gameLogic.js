@@ -253,8 +253,8 @@ const step = ({ action, oldState, options, randoms }) => {
         const rechargeBonus = 5 + Math.floor(enemy.level / 5);
         rechargePlayerShield(state.player, rechargeBonus);
         state.messages.push(
-            `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
-          );
+          `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
+        );
         state.battlesWon++;
         state.gameScene = GameScene.MENU_SCENE;
       } else {
