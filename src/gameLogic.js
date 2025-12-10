@@ -162,7 +162,7 @@ const step = ({ action, oldState, options, randoms }) => {
       }
     };
     rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
-    localState.messages.push(`Player shield recharges by ${PLAYER_BASE_SHIELD_RECHARGE} to ${localState.player.shield}/${PLAYER_SHIELD_MAX}`);
+    localState.messages.push(`Player heals by ${PLAYER_BASE_SHIELD_RECHARGE}.`);
     debugPrintStatus();
   };
 
@@ -253,7 +253,7 @@ const step = ({ action, oldState, options, randoms }) => {
         const rechargeBonus = 5 + Math.floor(enemy.level / 5);
         rechargePlayerShield(state.player, rechargeBonus);
         state.messages.push(
-          `Shield recharged by ${rechargeBonus} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`
+          `Player healed by ${rechargeBonus}.`
         );
         state.battlesWon++;
         state.gameScene = GameScene.MENU_SCENE;
@@ -263,7 +263,7 @@ const step = ({ action, oldState, options, randoms }) => {
     } else if (action === BattleSceneAction.SHIELD) {
       const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
       rechargePlayerShield(state.player, recharge);
-      state.messages.push(`Focusing the shield recharges by ${recharge} to ${state.player.shield}/${PLAYER_SHIELD_MAX}`);
+      state.messages.push(`Focusing energy restored ${recharge} health.`);
       enemyAttack(state);
     } else if (action === BattleSceneAction.CONCEDE) {
       state.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
