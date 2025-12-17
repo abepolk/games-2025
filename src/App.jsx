@@ -47,7 +47,6 @@ const HealthBar = ({ attackable, current, max, label, color, index, handleAction
 
 
 const RPGInterface = () => {
-  const [messages, setMessages] = useState([]);
 
   const [helpHovered, setHelpHovered] = useState(false);
   const [helpClicked, setHelpClicked] = useState(false);
@@ -58,6 +57,7 @@ const RPGInterface = () => {
     gameScene: GameScene.MENU_SCENE,
     messages: []
   });
+  const [prevGameState, setPrevGameState] = useState(null);
 
   useEffect(() => {
     setGameState((prevState) => {
@@ -67,14 +67,18 @@ const RPGInterface = () => {
     })
   }, []);
 
-
-  useEffect(() => setMessages(gameState.messages), [gameState]);
-
   useEffect(() => {
-    messagesBottom.current.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const messagesLengthSame = prevGameState && prevGameState.messages.length === gameState.messages.length;
+    const messagesHaveChanged = !messagesLengthSame || !prevGameState.messages.every((message, index) => {
+      return message = gameState.messages[index];
+    });
+    if (messagesHaveChanged) {
+      messagesBottom.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [gameState, prevGameState]);
 
   const handleAction = (action, options) => {
+    setPrevGameState(gameState);
     setGameState((prevState) => {
       const state = structuredClone(prevState);
       try {
@@ -177,7 +181,7 @@ const RPGInterface = () => {
             <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
           </div>
           <div className="p-4 overflow-y-scroll">
-            {messages && messages.map((message, index) => (
+            {gameState.messages && gameState.messages.map((message, index) => (
               <div
                 key={index}
                 className="text-gray-300 leading-relaxed"
