@@ -70,7 +70,7 @@ const RPGInterface = () => {
   useEffect(() => {
     const messagesLengthSame = prevGameState && prevGameState.messages.length === gameState.messages.length;
     const messagesHaveChanged = !messagesLengthSame || !prevGameState.messages.every((message, index) => {
-      return message = gameState.messages[index];
+      return message === gameState.messages[index];
     });
     if (messagesHaveChanged) {
       messagesBottom.current.scrollIntoView({ behavior: "smooth" });
