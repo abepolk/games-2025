@@ -28,9 +28,6 @@ export default defineConfig([
         sourceType: 'module',
       },
     },
-    plugins: {
-      '@stylistic': stylistic
-    },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
