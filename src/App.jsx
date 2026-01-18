@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import daggerIcon from './dagger.svg';
+import stickIcon from './stick.svg';
+import spearIcon from './spear.svg';
 import './App.css'
 
 import {
@@ -7,11 +10,12 @@ import {
   BattleSceneAction,
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
+  WeaponKind,
   initGame,
   updateState
 } from './gameLogic.js'
 
-const HealthBar = ({ attackable, current, max, label, color, index, handleAction }) => (
+const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, handleAction }) => (
   <div className="flex">
     {attackable && (
       <div className="bg-gray-600
@@ -43,9 +47,15 @@ const HealthBar = ({ attackable, current, max, label, color, index, handleAction
       </div>
     </div>
     {/* Placeholder for dagger, stick and spear icons */}
-    <svg class="h-10 ml-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+    {weaponKind === WeaponKind.DAGGER && (
+      <img src={daggerIcon} className="h-12 w-12" alt="dagger" />
+    )}
+    {weaponKind === WeaponKind.STICK && (
+      <img src={stickIcon} className="h-12 w-12" alt="stick" />
+    )}
+    {weaponKind === WeaponKind.SPEAR && (
+      <img src={spearIcon} className="h-12 w-12" alt="spear" />
+    )}
   </div>
 );
 
@@ -223,6 +233,7 @@ const RPGInterface = () => {
                     label={`Enemy ${enemy.enemyNum} Health`}
                     color="bg-red-800"
                     handleAction={handleAction}
+                    weaponKind={enemy.weapon.kind}
                   />
                 ))}
               </div>

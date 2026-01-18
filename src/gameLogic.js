@@ -268,6 +268,7 @@ export {
   BattleSceneAction,
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
+  WeaponKind,
   initGame,
   updateState
 };
