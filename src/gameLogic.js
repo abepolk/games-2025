@@ -20,7 +20,8 @@ const BattleSceneAction = Object.freeze({
   ATTACK_STEP_1: "ATTACK_STEP_1",
   ATTACK_STEP_2: "ATTACK_STEP_2",
   SHIELD: "SHIELD",
-  CONCEDE: "CONCEDE"
+  CONCEDE: "CONCEDE",
+  CANCEL_ATTACK: "CANCEL_ATTACK",
 });
 
 const WeaponKind = Object.freeze({
@@ -197,6 +198,8 @@ const updateState = ({ action, state, options }) => {
     if (action === BattleSceneAction.ATTACK_STEP_1) {
       state.attackStep2 = true;
     } else {
+      // Set attackStep2 to false whenever we're not in ATTACK_STEP_1,
+      // including if we get the CANCEL_ATTACK action, which is currently a no-op
       state.attackStep2 = false;
     }
     if (action === BattleSceneAction.ATTACK_STEP_2) {
