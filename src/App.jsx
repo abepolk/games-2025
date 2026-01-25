@@ -105,6 +105,43 @@ const RPGInterface = () => {
     });
   };
 
+  let buttonOptions;
+  if (gameState.gameScene === GameScene.BATTLE_SCENE && gameState.attackStep2) {
+    buttonOptions = (
+      <>
+        <button key="attack-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-gray text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}>
+          Attack
+        </button>
+        {/* We added keys so that transitions would only occur on hover, and not when switching which buttons are visible */}
+        <button key="cancel-attack-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-zinc-600 hover:bg-zinc-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-1000" onClick={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}>
+          Cancel Attack
+        </button>
+      </>
+    )
+  } else if (gameState.gameScene == GameScene.BATTLE_SCENE) {
+    buttonOptions = (
+      <>
+        <button key="attack-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}>
+          Attack
+        </button>
+        <button key="defend-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-1000" onClick={() => { handleAction(BattleSceneAction.SHIELD); }}>
+          Defend
+        </button>
+      </>
+    )
+  } else {
+    buttonOptions = (
+      <>
+        <button key="battle-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.BATTLE); }}>
+          Battle
+        </button>
+        <button key="restart-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.RESTART); }}>
+          Restart
+        </button>
+      </>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       {/* the 12 has to be 2x the 6 in p-6 */}
@@ -246,31 +283,7 @@ const RPGInterface = () => {
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
             <h3 className="text-sm font-medium text-gray-300 mb-4">{!(gameState.gameScene === GameScene.MENU_SCENE) ? 'Combat Actions' : 'Game Options'}</h3>
             <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
-              {gameState.gameScene === GameScene.BATTLE_SCENE ? (
-                <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}>
-                    Attack
-                  </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.SHIELD); }}>
-                    Defend
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.BATTLE); }}>
-                    Battle
-                  </button>
-                  <button className="block w-full sm:w-auto mb-4 sm:mb-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(MenuSceneAction.RESTART); }}>
-                    Restart
-                  </button>
-                </>
-              )}
-              {/* <button className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                  Use Item
-                </button>
-                <button className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                  Special
-                </button> */}
+              {buttonOptions}
             </div >
           </div >
 
