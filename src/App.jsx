@@ -19,6 +19,7 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
   <div className="flex">
     {attackable && (
       <button className="bg-gray-600
+        hover:bg-gray-700
         rounded-lg
         px-4
         mr-4
@@ -113,7 +114,7 @@ const RPGInterface = () => {
           Attack
         </button>
         {/* We added keys so that transitions would only occur on hover, and not when switching which buttons are visible */}
-        <button key="cancel-attack-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-zinc-600 hover:bg-zinc-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-1000" onClick={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}>
+        <button key="cancel-attack-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-zinc-600 hover:bg-zinc-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}>
           Cancel Attack
         </button>
       </>
@@ -124,7 +125,7 @@ const RPGInterface = () => {
         <button key="attack-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-red-800 hover:bg-red-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}>
           Attack
         </button>
-        <button key="defend-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-1000" onClick={() => { handleAction(BattleSceneAction.SHIELD); }}>
+        <button key="defend-button" className="block w-full sm:w-auto mb-4 sm:mb-0 bg-indigo-800 hover:bg-indigo-900 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" onClick={() => { handleAction(BattleSceneAction.SHIELD); }}>
           Defend
         </button>
       </>
