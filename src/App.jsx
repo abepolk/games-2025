@@ -110,7 +110,7 @@ const RPGInterface = () => {
       {/* the 12 has to be 2x the 6 in p-6 */}
       <div className="min-h-[calc(100vh_-_12_*_var(--spacing))] max-h-screen flex flex-col max-w-4xl mx-auto">
         {/* Header */}
-        <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">Adventure Quest</h1>
+        <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">React Tactics</h1>
 
         <div className="items-center
                     fixed

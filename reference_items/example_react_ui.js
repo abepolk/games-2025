@@ -35,7 +35,7 @@ const RPGInterface = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-100 mb-2">Adventure Quest</h1>
+          <h1 className="text-3xl font-bold text-gray-100 mb-2">React Tactics</h1>
           <div className="h-1 w-20 bg-blue-500 mx-auto rounded-full"></div>
         </div>
 
