@@ -18,7 +18,7 @@ import {
 const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, handleAction }) => (
   <div className="flex">
     {attackable && (
-      <div className="bg-gray-600
+      <button className="bg-gray-600
         rounded-lg
         px-4
         mr-4
@@ -32,7 +32,7 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
         }}
       >
         Select
-      </div>
+      </button>
     )}
     <div className="grow">
       <div className="flex justify-between items-center mb-2">
