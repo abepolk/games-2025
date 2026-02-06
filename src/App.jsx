@@ -77,7 +77,7 @@ const ActionButton = ({ text, baseColor, hoverClass, actionCallback, enabled }) 
     rounded-lg
     transition-colors
     duration-200
-    disabled:opacity-50
+    disabled:saturate-50
     `}
     disabled={!enabled}
     onClick={actionCallback}>
@@ -136,7 +136,7 @@ const RPGInterface = () => {
     buttonOptions = (
       <>
         {/* We added keys so that transitions would only occur on hover, and not when switching which buttons are visible */}
-        <ActionButton key="attack-button" text="Attack" baseColor="bg-red-gray" enabled={false} actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}></ActionButton>
+        <ActionButton key="attack-button" text="Attack" baseColor="bg-red-800" enabled={false} actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}></ActionButton>
         <ActionButton key="cancel-attack-button" text="Cancel Attack" baseColor="bg-zinc-600" hoverClass="hover:bg-zinc-700" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}></ActionButton >
       </>
     )
