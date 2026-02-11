@@ -75,7 +75,8 @@ const ActionButton = ({ text, baseColor, hoverClass, actionCallback, enabled }) 
     py-2
     px-4
     rounded-lg
-    transition-colors
+    transition-color
+    transition-filter
     duration-200
     disabled:saturate-50
     `}
