@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useReducer, useRef, useEffect } from 'react'
 import daggerIcon from './dagger.svg';
 import stickIcon from './stick.svg';
 import spearIcon from './spear.svg';
@@ -11,11 +11,11 @@ import {
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   WeaponKind,
-  initGame,
+  initialGameState,
   updateState
 } from './gameLogic.js'
 
-const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, handleAction }) => (
+const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, dispatchAction }) => (
   <div className="flex">
     {attackable && (
       <button className="bg-gray-600
@@ -27,7 +27,8 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
         flex-col
         justify-center"
         onClick={() => {
-          handleAction(BattleSceneAction.ATTACK_STEP_2, {
+          dispatchAction({
+            type: BattleSceneAction.ATTACK_STEP_2,
             attackedEnemyIndex: index
           });
         }}
@@ -89,66 +90,49 @@ const ActionButton = ({ text, baseColor, hoverClass, actionCallback, enabled }) 
 
 const RPGInterface = () => {
 
+  const [gameState, dispatchAction] = useReducer(updateState, {
+    ...initialGameState(),
+    gameScene: GameScene.MENU_SCENE,
+    messages: []
+  })
+
   const [helpHovered, setHelpHovered] = useState(false);
   const [helpClicked, setHelpClicked] = useState(false);
 
   const messagesBottom = useRef(null);
 
-  const [gameState, setGameState] = useState({
-    gameScene: GameScene.MENU_SCENE,
-    messages: []
-  });
   const [prevGameState, setPrevGameState] = useState(null);
 
   useEffect(() => {
-    setGameState((prevState) => {
-      const localState = structuredClone(prevState);
-      initGame(localState);
-      return localState;
-    })
-  }, []);
-
-  useEffect(() => {
+    console.log("checking messages for updates!");
     const messagesLengthSame = prevGameState && prevGameState.messages.length === gameState.messages.length;
     const messagesHaveChanged = !messagesLengthSame || !prevGameState.messages.every((message, index) => {
       return message === gameState.messages[index];
     });
     if (messagesHaveChanged) {
+      console.log("messages have changed!");
       messagesBottom.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [gameState, prevGameState]);
-
-  const handleAction = (action, options) => {
     setPrevGameState(gameState);
-    setGameState((prevState) => {
-      const state = structuredClone(prevState);
-      try {
-        return updateState({ action, state, options });
-      } catch (error) {
-        console.error(error);
-        state.messages.push(`Error: ${error}`);
-        return state;
-      }
-    });
-  };
+  }, [gameState]);
 
   let buttonOptions;
   if (gameState.gameScene === GameScene.BATTLE_SCENE) {
     buttonOptions = (
       <>
-        <ActionButton text="Attack" baseColor="bg-red-800" hoverClass="hover:bg-red-900" enabled={!gameState.attackStep2} actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}></ActionButton>
+        <ActionButton text="Attack" baseColor="bg-red-800" hoverClass="hover:bg-red-900" enabled={!gameState.attackStep2} actionCallback={() => { dispatchAction({ type: BattleSceneAction.ATTACK_STEP_1 }); }}></ActionButton>
         {
           gameState.attackStep2 ?
-            <ActionButton text="Cancel Attack" baseColor="bg-zinc-600" hoverClass="hover:bg-zinc-700" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}></ActionButton >
-          : <ActionButton text="Defend" baseColor="bg-indigo-800" hoverClass="hover:bg-indigo-900" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.SHIELD); }}></ActionButton>
+            <ActionButton text="Cancel Attack" baseColor="bg-zinc-600" hoverClass="hover:bg-zinc-700" enabled={true} actionCallback={() => { dispatchAction({ type: BattleSceneAction.CANCEL_ATTACK }); }}></ActionButton >
+            : <ActionButton text="Defend" baseColor="bg-indigo-800" hoverClass="hover:bg-indigo-900" enabled={true} actionCallback={() => { dispatchAction({ type: BattleSceneAction.SHIELD }); }}></ActionButton>
         }
       </>
     );
   } else {
     buttonOptions = (
       <>
-        <ActionButton text="Battle" baseColor="bg-orange-600" hoverClass="hover:bg-orange-700" enabled={!(gameState.player && gameState.player.defeated)} actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}></ActionButton>
-        <ActionButton text="Restart" baseColor="bg-gray-600" hoverClass="hover:bg-gray-700" enabled={true} actionCallback={() => { handleAction(MenuSceneAction.RESTART); }}></ActionButton>
+        <ActionButton text="Battle" baseColor="bg-orange-600" hoverClass="hover:bg-orange-700" enabled={!(gameState.player && gameState.player.defeated)} actionCallback={() => { dispatchAction({ type: MenuSceneAction.BATTLE }); }}></ActionButton>
+        <ActionButton text="Restart" baseColor="bg-gray-600" hoverClass="hover:bg-gray-700" enabled={true} actionCallback={() => { dispatchAction({ type: MenuSceneAction.RESTART }); }}></ActionButton>
       </>
     );
   }
@@ -267,7 +251,7 @@ const RPGInterface = () => {
                   max={PLAYER_SHIELD_MAX}
                   label="Player Health"
                   color="bg-green-500"
-                  handleAction={handleAction}
+                  dispatchAction={dispatchAction}
                 />
               </div>
               <div className="bg-gray-800 rounded-lg p-4 space-y-4">
@@ -280,7 +264,7 @@ const RPGInterface = () => {
                     max={ENEMY_SHIELD_MAX}
                     label={`Enemy ${enemy.enemyNum} Health`}
                     color="bg-red-800"
-                    handleAction={handleAction}
+                    dispatchAction={dispatchAction}
                     weaponKind={enemy.weapon.kind}
                   />
                 ))}
