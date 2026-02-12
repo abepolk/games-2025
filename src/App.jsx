@@ -77,7 +77,7 @@ const ActionButton = ({ text, baseColor, hoverClass, actionCallback, enabled }) 
     rounded-lg
     transition-color
     transition-filter
-    duration-200
+    duration-100
     disabled:saturate-50
     `}
     disabled={!enabled}
@@ -133,28 +133,24 @@ const RPGInterface = () => {
   };
 
   let buttonOptions;
-  if (gameState.gameScene === GameScene.BATTLE_SCENE && gameState.attackStep2) {
+  if (gameState.gameScene === GameScene.BATTLE_SCENE) {
     buttonOptions = (
       <>
-        {/* We added keys so that transitions would only occur on hover, and not when switching which buttons are visible */}
-        <ActionButton key="attack-button" text="Attack" baseColor="bg-red-800" enabled={false} actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}></ActionButton>
-        <ActionButton key="cancel-attack-button" text="Cancel Attack" baseColor="bg-zinc-600" hoverClass="hover:bg-zinc-700" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}></ActionButton >
+        <ActionButton text="Attack" baseColor="bg-red-800" hoverClass="hover:bg-red-900" enabled={!gameState.attackStep2} actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}></ActionButton>
+        {
+          gameState.attackStep2 ?
+            <ActionButton text="Cancel Attack" baseColor="bg-zinc-600" hoverClass="hover:bg-zinc-700" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}></ActionButton >
+          : <ActionButton text="Defend" baseColor="bg-indigo-800" hoverClass="hover:bg-indigo-900" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.SHIELD); }}></ActionButton>
+        }
       </>
-    )
-  } else if (gameState.gameScene == GameScene.BATTLE_SCENE) {
-    buttonOptions = (
-      <>
-        <ActionButton key="attack-button" text="Attack" baseColor="bg-red-800" hoverClass="hover:bg-red-900" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}></ActionButton >
-        <ActionButton key="defend-button" text="Defend" baseColor="bg-indigo-800" hoverClass="hover:bg-indigo-900" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.SHIELD); }}></ActionButton>
-      </>
-    )
+    );
   } else {
     buttonOptions = (
       <>
-        <ActionButton key="battle-button" text="Battle" baseColor="bg-orange-600" hoverClass="hover:bg-orange-700" enabled={!(gameState.player && gameState.player.defeated)} actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}></ActionButton>
-        <ActionButton key="restart-button" text="Restart" baseColor="bg-gray-600" hoverClass="hover:bg-gray-700" enabled={true} actionCallback={() => { handleAction(MenuSceneAction.RESTART); }}></ActionButton>
+        <ActionButton text="Battle" baseColor="bg-orange-600" hoverClass="hover:bg-orange-700" enabled={!(gameState.player && gameState.player.defeated)} actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}></ActionButton>
+        <ActionButton text="Restart" baseColor="bg-gray-600" hoverClass="hover:bg-gray-700" enabled={true} actionCallback={() => { handleAction(MenuSceneAction.RESTART); }}></ActionButton>
       </>
-    )
+    );
   }
 
   return (
