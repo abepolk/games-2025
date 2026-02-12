@@ -1,6 +1,6 @@
 import { selectRandomElement } from "./utils";
 
-const PLAYER_SHIELD_MAX = 500;
+const PLAYER_SHIELD_MAX = 50;
 const PLAYER_BASE_SHIELD_RECHARGE = 2;
 
 const ENEMY_SHIELD_MAX = 20;
@@ -51,40 +51,47 @@ const weapons = [
   }
 ];
 
-const initGame = (state) => {
-  // A counter for enemies that lets us refer to them
-  state.enemyNum = 0;
-  state.player = {
-    shield: PLAYER_SHIELD_MAX,
-    defeated: false,
-    weapon: {
-      baseDamage: 3,
-      bonusDamageMin: 0,
-      bonusDamageMax: 2
-    }
+// TODO: don't love that this is called "initialGameState" but is only part of the 
+// initialization of `gameState`. I'm not sure what to call this and we should revisit where
+// things are initialized if we go the reducer route.
+const initialGameState = () => {
+  return {
+    // A counter for enemies that lets us refer to them
+    enemyNum: 0,
+    player: {
+      shield: PLAYER_SHIELD_MAX,
+      defeated: false,
+      weapon: {
+        baseDamage: 3,
+        bonusDamageMin: 0,
+        bonusDamageMax: 2
+      }
+    },
+    enemies: [],
+    enemiesDefeated: 0,
+    battlesWon: 0,
+    attackStep2: false
   };
-  state.enemies = []
-  state.enemiesDefeated = 0;
-  state.battlesWon = 0;
-  state.attackStep2 = false;
-};
+}
 
-const updateState = ({ state, action }) => {
+const updateState = (state, action) => {
 
-  let inputState = structuredClone(state);
-  let localState = structuredClone(state);
+  // console.log(JSON.stringify(state));
+  // console.log(action);
+
+  let clonedState = structuredClone(state);
 
   const rechargePlayerShield = (player, amount) => {
     player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
   };
 
   const debugPrintStatus = () => {
-    const result = [`Player Shield: ${state.player.shield}/${PLAYER_SHIELD_MAX}`];
-    if (state.enemies.length === 0) {
+    const result = [`Player Shield: ${clonedState.player.shield}/${PLAYER_SHIELD_MAX}`];
+    if (clonedState.enemies.length === 0) {
       console.log("No enemies present");
       return;
     }
-    state.enemies.forEach((enemy, index) => {
+    clonedState.enemies.forEach((enemy, index) => {
       if (enemy === null) {
         console.error(`Enemy ${index} is null`);
         result.push(`Enemy ${index} is null`);
@@ -115,10 +122,10 @@ const updateState = ({ state, action }) => {
     };
   };
 
-  const createEnemy = (level, kind) => {
-    state.enemyNum++;
+  const createEnemy = (localState, level, kind) => {
+    localState.enemyNum++;
     return {
-      enemyNum: state.enemyNum,
+      enemyNum: localState.enemyNum,
       level,
       weapon: createWeapon(level, kind),
       shield: ENEMY_SHIELD_MAX,
@@ -170,54 +177,59 @@ const updateState = ({ state, action }) => {
   };
 
   try {
-    if (localState.gameScene === GameScene.MENU_SCENE) {
-      if (action === MenuSceneAction.SAVE) {
+    if (clonedState.gameScene === GameScene.MENU_SCENE) {
+      if (action.type === MenuSceneAction.SAVE) {
         throw "Saving not implemented yet.";
-      } else if (action === MenuSceneAction.RESTART) {
-        localState.gameScene = GameScene.MENU_SCENE;
-        initGame(localState);
-        localState.messages.push("Started a new game.");
+      } else if (action.type === MenuSceneAction.RESTART) {
+        clonedState = {
+          ...initialGameState(),
+          gameScene: clonedState.gameScene,
+          messages: clonedState.messages
+        }
+
+        clonedState.gameScene = GameScene.MENU_SCENE;
+        clonedState.messages.push("Started a new game.");
         debugPrintStatus();
-      } else if (action === MenuSceneAction.BATTLE) {
-        if (localState.player.defeated) {
-          localState.messages.push("Player was defeated. Click Restart to start a new game.");
+      } else if (action.type === MenuSceneAction.BATTLE) {
+        if (clonedState.player.defeated) {
+          clonedState.messages.push("Player was defeated. Click Restart to start a new game.");
         } else {
           const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
-          localState.enemies = [
+          clonedState.enemies = [
             undefined,
             undefined,
             undefined
           ].map(_ => {
             const weapon = selectRandomElement(initialWeapons);
-            return createEnemy(localState.battlesWon, weapon);
+            return createEnemy(clonedState, clonedState.battlesWon, weapon);
           });
-          localState.gameScene = GameScene.BATTLE_SCENE;
+          clonedState.gameScene = GameScene.BATTLE_SCENE;
           debugPrintStatus();
         }
       } else {
         // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
       }
-    } else if (localState.gameScene === GameScene.BATTLE_SCENE) {
-      if (action === BattleSceneAction.ATTACK_STEP_1) {
-        localState.attackStep2 = true;
+    } else if (clonedState.gameScene === GameScene.BATTLE_SCENE) {
+      if (action.type === BattleSceneAction.ATTACK_STEP_1) {
+        clonedState.attackStep2 = true;
       } else {
         // Set attackStep2 to false whenever we're not in ATTACK_STEP_1,
         // including if we get the CANCEL_ATTACK action, which is currently a no-op
-        localState.attackStep2 = false;
+        clonedState.attackStep2 = false;
       }
-      if (action === BattleSceneAction.ATTACK_STEP_2) {
-        const damage = weaponAttackDamage(localState.player.weapon);
-        const attackedEnemyIndex = options.attackedEnemyIndex
+      if (action.type === BattleSceneAction.ATTACK_STEP_2) {
+        const damage = weaponAttackDamage(clonedState.player.weapon);
+        const attackedEnemyIndex = action.attackedEnemyIndex
         console.assert(attackedEnemyIndex !== undefined);
-        const enemy = localState.enemies[attackedEnemyIndex];
+        const enemy = clonedState.enemies[attackedEnemyIndex];
         applyEnemyDamage(enemy, damage);
-        localState.messages.push(`Player attacks for ${damage} damage!`);
+        clonedState.messages.push(`Player attacks for ${damage} damage!`);
         if (enemy.defeated) {
           debugPrintStatus();
-          localState.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
-          localState.enemiesDefeated = localState.enemiesDefeated + 1;
-          localState.enemies.splice(attackedEnemyIndex, 1);
-          if (localState.enemies.length > 0) {
+          clonedState.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
+          clonedState.enemiesDefeated = clonedState.enemiesDefeated + 1;
+          clonedState.enemies.splice(attackedEnemyIndex, 1);
+          if (clonedState.enemies.length > 0) {
             const weaponForTransfer = enemy.weapon;
             var compatibleWeapon;
             if (enemy.weapon.kind === WeaponKind.DAGGER) {
@@ -229,48 +241,49 @@ const updateState = ({ state, action }) => {
             } else {
               throw "Weapon kind not found when looking for a compatible weapon";
             }
-            const enemiesCanTransfer = localState.enemies.filter(enemy => {
+            const enemiesCanTransfer = clonedState.enemies.filter(enemy => {
               return enemy.weapon.kind === compatibleWeapon;
             });
             if (enemiesCanTransfer.length > 0) {
               const weaponRecipient = selectRandomElement(enemiesCanTransfer);
               const oldWeapon = weaponRecipient.weapon;
               weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
-              localState.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
+              clonedState.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
             }
           }
         }
-        if (localState.enemies.length === 0) {
+        if (clonedState.enemies.length === 0) {
           const rechargeBonus = 5 + Math.floor(enemy.level / 5);
-          rechargePlayerShield(localState.player, rechargeBonus);
-          localState.messages.push(
+          rechargePlayerShield(clonedState.player, rechargeBonus);
+          clonedState.messages.push(
             `Player healed by ${rechargeBonus}.`
           );
-          localState.battlesWon++;
-          localState.gameScene = GameScene.MENU_SCENE;
+          clonedState.battlesWon++;
+          clonedState.gameScene = GameScene.MENU_SCENE;
         } else {
-          enemyAttack(localState);
+          enemyAttack(clonedState);
         }
-      } else if (action === BattleSceneAction.SHIELD) {
+      } else if (action.type === BattleSceneAction.SHIELD) {
         const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
-        rechargePlayerShield(localState.player, recharge);
-        localState.messages.push(`Focusing energy restored ${recharge} health.`);
-        enemyAttack(localState);
-      } else if (action === BattleSceneAction.CONCEDE) {
-        localState.messages.push(`Conceding. Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-        localState.messages.push("Click Restart to start a new game.");
-        localState.player.defeated = true;
-        localState.gameScene = GameScene.MENU_SCENE;
+        rechargePlayerShield(clonedState.player, recharge);
+        clonedState.messages.push(`Focusing energy restored ${recharge} health.`);
+        enemyAttack(clonedState);
+      } else if (action.type === BattleSceneAction.CONCEDE) {
+        clonedState.messages.push(`Conceding. Player defeated after winning ${clonedState.enemiesDefeated} battles! Game Over.`);
+        clonedState.messages.push("Click Restart to start a new game.");
+        clonedState.player.defeated = true;
+        clonedState.gameScene = GameScene.MENU_SCENE;
       }
     } else {
-      throw `Unknown scene ${localState.gameScene}`;
+      throw `Unknown scene ${clonedState.gameScene}`;
     }
   } catch (error) {
     console.error(error);
-    inputState.messages.push(`Error ${error}`);
-    return inputState;
+    originalState = structuredClone(state);
+    originalState.messages.push(`Error ${error}`);
+    return originalState;
   }
-  return localState;
+  return clonedState;
 }
 
 export {
@@ -280,6 +293,6 @@ export {
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   WeaponKind,
-  initGame,
+  initialGameState,
   updateState
 };

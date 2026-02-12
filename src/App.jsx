@@ -11,7 +11,7 @@ import {
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   WeaponKind,
-  initGame,
+  initialGameState,
   updateState
 } from './gameLogic.js'
 
@@ -91,6 +91,7 @@ const ActionButton = ({ text, baseColor, hoverClass, actionCallback, enabled }) 
 const RPGInterface = () => {
 
   const [gameState, dispatchAction] = useReducer(updateState, {
+    ...initialGameState(),
     gameScene: GameScene.MENU_SCENE,
     messages: []
   })
@@ -106,23 +107,26 @@ const RPGInterface = () => {
   // });
   const [prevGameState, setPrevGameState] = useState(null);
 
-  useEffect(() => {
-    setGameState((prevState) => {
-      const localState = structuredClone(prevState);
-      initGame(localState);
-      return localState;
-    })
-  }, []);
+  // useEffect(() => {
+  //   setGameState((prevState) => {
+  //     const localState = structuredClone(prevState);
+  //     initGame(localState);
+  //     return localState;
+  //   })
+  // }, []);
 
   useEffect(() => {
+    console.log("checking messages for updates!");
     const messagesLengthSame = prevGameState && prevGameState.messages.length === gameState.messages.length;
     const messagesHaveChanged = !messagesLengthSame || !prevGameState.messages.every((message, index) => {
       return message === gameState.messages[index];
     });
     if (messagesHaveChanged) {
+      console.log("messages have changed!");
       messagesBottom.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [gameState, prevGameState]);
+    setPrevGameState(gameState);
+  }, [gameState]);
 
   // const handleAction = (action, options) => {
   //   setPrevGameState(gameState);
