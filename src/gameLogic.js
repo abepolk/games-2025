@@ -1,26 +1,22 @@
 import { selectRandomElement } from "./utils";
 
-const PLAYER_SHIELD_MAX = 500;
+const PLAYER_SHIELD_MAX = 50;
 const PLAYER_BASE_SHIELD_RECHARGE = 2;
 
 const ENEMY_SHIELD_MAX = 20;
 
 const GameScene = Object.freeze({
   MENU_SCENE: "MENU_SCENE",
-  BATTLE_SCENE: "BATTLE_SCENE",
+  BATTLE_BASE: "BATTLE_BASE",
+  BATTLE_ATTACK: "BATTLE_ATTACK"
 });
 
-const MenuSceneAction = Object.freeze({
+const GameAction = Object.freeze({
   BATTLE: "BATTLE",
-  SAVE: "SAVE",
-  RESTART: "RESTART"
-});
-
-const BattleSceneAction = Object.freeze({
+  RESTART: "RESTART",
   ATTACK_STEP_1: "ATTACK_STEP_1",
   ATTACK_STEP_2: "ATTACK_STEP_2",
   SHIELD: "SHIELD",
-  CONCEDE: "CONCEDE",
   CANCEL_ATTACK: "CANCEL_ATTACK",
 });
 
@@ -66,8 +62,13 @@ const initGame = (state) => {
   state.enemies = []
   state.enemiesDefeated = 0;
   state.battlesWon = 0;
-  state.attackStep2 = false;
 };
+
+const checkScene = (attemptedAction, currentScene, allowedScenes) => {
+  if (!allowedScenes.includes(currentScene)) {
+    throw `Action ${attemptedAction} not allowed from Scene ${currentScene}`;
+  }
+}
 
 const updateState = ({ action, state, options }) => {
 
@@ -166,15 +167,21 @@ const updateState = ({ action, state, options }) => {
     }
   };
 
-  if (state.gameScene === GameScene.MENU_SCENE) {
-    if (action === MenuSceneAction.SAVE) {
-      throw "Saving not implemented yet.";
-    } else if (action === MenuSceneAction.RESTART) {
+  console.log(state.gameScene);
+  console.log(action);
+  switch (action) {
+    case GameAction.RESTART:
+      checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
+
       state.gameScene = GameScene.MENU_SCENE;
       initGame(state);
       state.messages.push("Started a new game.");
       debugPrintStatus();
-    } else if (action === MenuSceneAction.BATTLE) {
+
+      break;
+    case GameAction.BATTLE:
+      checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
+
       if (state.player.defeated) {
         state.messages.push("Player was defeated. Click Restart to start a new game.");
       } else {
@@ -187,22 +194,35 @@ const updateState = ({ action, state, options }) => {
           const weapon = selectRandomElement(initialWeapons);
           return createEnemy(state.battlesWon, weapon);
         });
-        state.gameScene = GameScene.BATTLE_SCENE;
+        state.gameScene = GameScene.BATTLE_BASE;
         debugPrintStatus();
       }
-    } else {
-      // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
-      throw `Unknown command ${action}`;
-    }
-  } else if (state.gameScene === GameScene.BATTLE_SCENE) {
-    if (action === BattleSceneAction.ATTACK_STEP_1) {
-      state.attackStep2 = true;
-    } else {
-      // Set attackStep2 to false whenever we're not in ATTACK_STEP_1,
-      // including if we get the CANCEL_ATTACK action, which is currently a no-op
-      state.attackStep2 = false;
-    }
-    if (action === BattleSceneAction.ATTACK_STEP_2) {
+
+      break;
+    case GameAction.ATTACK_STEP_1:
+      checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
+
+      state.gameScene = GameScene.BATTLE_ATTACK;
+
+      break;
+    case GameAction.SHIELD:
+      checkScene(action, state.gameScene, [GameScene.BATTLE_BASE])
+
+      const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
+      rechargePlayerShield(state.player, recharge);
+      state.messages.push(`Focusing energy restored ${recharge} health.`);
+      enemyAttack(state);
+
+      break;
+    case GameAction.CANCEL_ATTACK:
+      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK])
+
+      state.gameScene = GameScene.BATTLE_BASE;
+
+      break;
+    case GameAction.ATTACK_STEP_2:
+      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK])
+
       const damage = weaponAttackDamage(state.player.weapon);
       const attackedEnemyIndex = options.attackedEnemyIndex
       console.assert(attackedEnemyIndex !== undefined);
@@ -248,27 +268,119 @@ const updateState = ({ action, state, options }) => {
       } else {
         enemyAttack(state);
       }
-    } else if (action === BattleSceneAction.SHIELD) {
-      const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
-      rechargePlayerShield(state.player, recharge);
-      state.messages.push(`Focusing energy restored ${recharge} health.`);
-      enemyAttack(state);
-    } else if (action === BattleSceneAction.CONCEDE) {
-      state.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
-      state.messages.push("Click Restart to start a new game.");
-      state.player.defeated = true;
-      state.gameScene = GameScene.MENU_SCENE;
-    }
-  } else {
-    throw `Unknown scene ${state.gameScene}`;
+
+      if (!state.player.defeated) {
+        state.gameScene = GameScene.BATTLE_BASE;
+      }
+
+      break;
+    default:
+      throw `Unknown Action ${action}`;
+
   }
+
+  // if (state.gameScene === GameScene.MENU_SCENE) {
+  //   if (action === MenuSceneAction.SAVE) {
+  //     throw "Saving not implemented yet.";
+  //   } else if (action === MenuSceneAction.RESTART) {
+  //     state.gameScene = GameScene.MENU_SCENE;
+  //     initGame(state);
+  //     state.messages.push("Started a new game.");
+  //     debugPrintStatus();
+  //   } else if (action === MenuSceneAction.BATTLE) {
+  //     if (state.player.defeated) {
+  //       state.messages.push("Player was defeated. Click Restart to start a new game.");
+  //     } else {
+  //       const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
+  //       state.enemies = [
+  //         undefined,
+  //         undefined,
+  //         undefined
+  //       ].map(_ => {
+  //         const weapon = selectRandomElement(initialWeapons);
+  //         return createEnemy(state.battlesWon, weapon);
+  //       });
+  //       state.gameScene = GameScene.BATTLE_SCENE;
+  //       debugPrintStatus();
+  //     }
+  //   } else {
+  //     // We shouldn't reach this case because we checked for valid actions at the start of handleAction.
+  //     throw `Unknown command ${action}`;
+  //   }
+  // } else if (state.gameScene === GameScene.BATTLE_SCENE) {
+  //   if (action === BattleSceneAction.ATTACK_STEP_1) {
+  //     state.attackStep2 = true;
+  //   } else {
+  //     // Set attackStep2 to false whenever we're not in ATTACK_STEP_1,
+  //     // including if we get the CANCEL_ATTACK action, which is currently a no-op
+  //     state.attackStep2 = false;
+  //   }
+  //   if (action === BattleSceneAction.ATTACK_STEP_2) {
+  //     const damage = weaponAttackDamage(state.player.weapon);
+  //     const attackedEnemyIndex = options.attackedEnemyIndex
+  //     console.assert(attackedEnemyIndex !== undefined);
+  //     const enemy = state.enemies[attackedEnemyIndex];
+  //     applyEnemyDamage(enemy, damage);
+  //     state.messages.push(`Player attacks for ${damage} damage!`);
+  //     if (enemy.defeated) {
+  //       debugPrintStatus();
+  //       state.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
+  //       state.enemiesDefeated = state.enemiesDefeated + 1;
+  //       state.enemies.splice(attackedEnemyIndex, 1);
+  //       if (state.enemies.length > 0) {
+  //         const weaponForTransfer = enemy.weapon;
+  //         var compatibleWeapon;
+  //         if (enemy.weapon.kind === WeaponKind.DAGGER) {
+  //           compatibleWeapon = WeaponKind.STICK;
+  //         } else if (enemy.weapon.kind === WeaponKind.STICK) {
+  //           compatibleWeapon = WeaponKind.DAGGER;
+  //         } else if (enemy.weapon.kind === WeaponKind.SPEAR) {
+  //           compatibleWeapon = null;
+  //         } else {
+  //           throw "Weapon kind not found when looking for a compatible weapon";
+  //         }
+  //         const enemiesCanTransfer = state.enemies.filter(enemy => {
+  //           return enemy.weapon.kind === compatibleWeapon;
+  //         });
+  //         if (enemiesCanTransfer.length > 0) {
+  //           const weaponRecipient = selectRandomElement(enemiesCanTransfer);
+  //           const oldWeapon = weaponRecipient.weapon;
+  //           weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
+  //           state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
+  //         }
+  //       }
+  //     }
+  //     if (state.enemies.length === 0) {
+  //       const rechargeBonus = 5 + Math.floor(enemy.level / 5);
+  //       rechargePlayerShield(state.player, rechargeBonus);
+  //       state.messages.push(
+  //         `Player healed by ${rechargeBonus}.`
+  //       );
+  //       state.battlesWon++;
+  //       state.gameScene = GameScene.MENU_SCENE;
+  //     } else {
+  //       enemyAttack(state);
+  //     }
+  //   } else if (action === BattleSceneAction.SHIELD) {
+  //     const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
+  //     rechargePlayerShield(state.player, recharge);
+  //     state.messages.push(`Focusing energy restored ${recharge} health.`);
+  //     enemyAttack(state);
+  //   } else if (action === BattleSceneAction.CONCEDE) {
+  //     state.messages.push(`Conceding. Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
+  //     state.messages.push("Click Restart to start a new game.");
+  //     state.player.defeated = true;
+  //     state.gameScene = GameScene.MENU_SCENE;
+  //   }
+  // } else {
+  //   throw `Unknown scene ${state.gameScene}`;
+  // }
   return state;
 }
 
 export {
   GameScene,
-  MenuSceneAction,
-  BattleSceneAction,
+  GameAction,
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   WeaponKind,

@@ -6,8 +6,7 @@ import './App.css'
 
 import {
   GameScene,
-  MenuSceneAction,
-  BattleSceneAction,
+  GameAction,
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   WeaponKind,
@@ -27,7 +26,7 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
         flex-col
         justify-center"
         onClick={() => {
-          handleAction(BattleSceneAction.ATTACK_STEP_2, {
+          handleAction(GameAction.ATTACK_STEP_2, {
             attackedEnemyIndex: index
           });
         }}
@@ -143,7 +142,7 @@ const RPGInterface = () => {
   };
 
   let buttonOptions;
-  if (gameState.gameScene === GameScene.BATTLE_SCENE) {
+  if (gameState.gameScene === GameScene.MENU_SCENE) {
     buttonOptions = (
       <>
         {/* TODO Add back the keys */}
@@ -154,27 +153,27 @@ const RPGInterface = () => {
           disabledBgClass="disabled:bg-red-gray"
           disabledClass="disabled:text-gray-400"
           enabled={!gameState.attackStep2}
-          actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}
+          actionCallback={() => { handleAction(GameAction.ATTACK_STEP_1); }}
         />
         {
           gameState.attackStep2 ?
-          // TODO Add disabled colors (including background and text) to all buttons except the first
-          // And possibly make the disabled text class just a constant color instead of a prop here
+            // TODO Add disabled colors (including background and text) to all buttons except the first
+            // And possibly make the disabled text class just a constant color instead of a prop here
             <ActionButton
               text="Cancel Attack"
               baseColor="bg-zinc-600"
               hoverClass="hover:bg-zinc-700"
               disabledClass="disabled:bg-white"
               enabled={true}
-              actionCallback={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}
+              actionCallback={() => { handleAction(GameAction.CANCEL_ATTACK); }}
             />
-          : <ActionButton
+            : <ActionButton
               text="Defend"
               baseColor="bg-indigo-800"
               hoverClass="hover:bg-indigo-900"
               disabledClass="disabled:bg-white"
               enabled={true}
-              actionCallback={() => { handleAction(BattleSceneAction.SHIELD); }}
+              actionCallback={() => { handleAction(GameAction.SHIELD); }}
             />
         }
       </>
@@ -182,7 +181,7 @@ const RPGInterface = () => {
   } else {
     buttonOptions = (
       <>
-      {!(gameState.player && gameState.player.defeated) &&
+        {!(gameState.player && gameState.player.defeated) &&
           <ActionButton
             text="Battle"
             baseColor="bg-orange-600"
@@ -190,9 +189,9 @@ const RPGInterface = () => {
             disabledBgClass="disabled:bg-orange-gray"
             disabledClass="disabled:text-gray-400"
             enabled={true}
-            actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}
+            actionCallback={() => { handleAction(GameAction.BATTLE); }}
           />
-      }
+        }
         <ActionButton
           text="Restart"
           baseColor="bg-gray-600"
@@ -200,7 +199,7 @@ const RPGInterface = () => {
           disabledClass="disabled:bg-white"
           spanWholeWidth={gameState.player && gameState.player.defeated}
           enabled={true}
-          actionCallback={() => { handleAction(MenuSceneAction.RESTART); }}
+          actionCallback={() => { handleAction(GameAction.RESTART); }}
         />
       </>
     );
@@ -312,7 +311,7 @@ const RPGInterface = () => {
 
         {/* Health Bars */}
         {
-          gameState.gameScene === GameScene.BATTLE_SCENE && (
+          (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_ATTACK) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
               <div className="bg-gray-800 rounded-lg p-4">
                 <HealthBar
@@ -328,7 +327,7 @@ const RPGInterface = () => {
                   <HealthBar
                     key={enemy.enemyNum}
                     index={index}
-                    attackable={gameState.attackStep2}
+                    attackable={gameState.gameScene === GameScene.BATTLE_ATTACK}
                     current={enemy.shield}
                     max={ENEMY_SHIELD_MAX}
                     label={`Enemy ${enemy.enemyNum} Health`}
