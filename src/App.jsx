@@ -61,7 +61,16 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
 );
 
 
-const ActionButton = ({ text, baseColor, hoverClass, disabledBgClass, disabledClass, actionCallback, enabled }) => (
+const ActionButton = ({
+  text,
+  baseColor,
+  hoverClass,
+  disabledBgClass,
+  disabledClass,
+  spanWholeWidth,
+  actionCallback,
+  enabled
+}) => (
   <button
     className={`block
     w-full
@@ -72,6 +81,7 @@ const ActionButton = ({ text, baseColor, hoverClass, disabledBgClass, disabledCl
     ${(hoverClass && enabled) ? hoverClass : ""}
     ${disabledBgClass ? disabledBgClass : ""}
     ${disabledClass ? disabledClass : ""}
+    ${spanWholeWidth ? "col-span-2" : ""}
     text-white
     font-medium
     py-2
@@ -172,19 +182,23 @@ const RPGInterface = () => {
   } else {
     buttonOptions = (
       <>
-        <ActionButton
-          text="Battle"
-          baseColor="bg-orange-600"
-          hoverClass="hover:bg-orange-700"
-          disabledClass="disabled:bg-white"
-          enabled={!(gameState.player && gameState.player.defeated)}
-          actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}
-        />
+      {!(gameState.player && gameState.player.defeated) &&
+          <ActionButton
+            text="Battle"
+            baseColor="bg-orange-600"
+            hoverClass="hover:bg-orange-700"
+            disabledBgClass="disabled:bg-orange-gray"
+            disabledClass="disabled:text-gray-400"
+            enabled={true}
+            actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}
+          />
+      }
         <ActionButton
           text="Restart"
           baseColor="bg-gray-600"
           hoverClass="hover:bg-gray-700"
           disabledClass="disabled:bg-white"
+          spanWholeWidth={gameState.player && gameState.player.defeated}
           enabled={true}
           actionCallback={() => { handleAction(MenuSceneAction.RESTART); }}
         />
