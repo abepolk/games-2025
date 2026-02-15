@@ -61,7 +61,7 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
 );
 
 
-const ActionButton = ({ text, baseColor, hoverClass, actionCallback, enabled }) => (
+const ActionButton = ({ text, baseColor, hoverClass, disabledBgClass, disabledClass, actionCallback, enabled }) => (
   <button
     className={`block
     w-full
@@ -70,15 +70,15 @@ const ActionButton = ({ text, baseColor, hoverClass, actionCallback, enabled }) 
     sm:mb-0
     ${baseColor}
     ${(hoverClass && enabled) ? hoverClass : ""}
+    ${disabledBgClass ? disabledBgClass : ""}
+    ${disabledClass ? disabledClass : ""}
     text-white
     font-medium
     py-2
     px-4
     rounded-lg
-    transition-color
-    transition-filter
+    transition-colors
     duration-100
-    disabled:saturate-50
     `}
     disabled={!enabled}
     onClick={actionCallback}>
@@ -136,19 +136,58 @@ const RPGInterface = () => {
   if (gameState.gameScene === GameScene.BATTLE_SCENE) {
     buttonOptions = (
       <>
-        <ActionButton text="Attack" baseColor="bg-red-800" hoverClass="hover:bg-red-900" enabled={!gameState.attackStep2} actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}></ActionButton>
+        {/* TODO Add back the keys */}
+        <ActionButton
+          text="Attack"
+          baseColor="bg-red-800"
+          hoverClass="hover:bg-red-900"
+          disabledBgClass="disabled:bg-red-gray"
+          disabledClass="disabled:text-gray-400"
+          enabled={!gameState.attackStep2}
+          actionCallback={() => { handleAction(BattleSceneAction.ATTACK_STEP_1); }}
+        />
         {
           gameState.attackStep2 ?
-            <ActionButton text="Cancel Attack" baseColor="bg-zinc-600" hoverClass="hover:bg-zinc-700" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}></ActionButton >
-          : <ActionButton text="Defend" baseColor="bg-indigo-800" hoverClass="hover:bg-indigo-900" enabled={true} actionCallback={() => { handleAction(BattleSceneAction.SHIELD); }}></ActionButton>
+          // TODO Add disabled colors (including background and text) to all buttons except the first
+          // And possibly make the disabled text class just a constant color instead of a prop here
+            <ActionButton
+              text="Cancel Attack"
+              baseColor="bg-zinc-600"
+              hoverClass="hover:bg-zinc-700"
+              disabledClass="disabled:bg-white"
+              enabled={true}
+              actionCallback={() => { handleAction(BattleSceneAction.CANCEL_ATTACK); }}
+            />
+          : <ActionButton
+              text="Defend"
+              baseColor="bg-indigo-800"
+              hoverClass="hover:bg-indigo-900"
+              disabledClass="disabled:bg-white"
+              enabled={true}
+              actionCallback={() => { handleAction(BattleSceneAction.SHIELD); }}
+            />
         }
       </>
     );
   } else {
     buttonOptions = (
       <>
-        <ActionButton text="Battle" baseColor="bg-orange-600" hoverClass="hover:bg-orange-700" enabled={!(gameState.player && gameState.player.defeated)} actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}></ActionButton>
-        <ActionButton text="Restart" baseColor="bg-gray-600" hoverClass="hover:bg-gray-700" enabled={true} actionCallback={() => { handleAction(MenuSceneAction.RESTART); }}></ActionButton>
+        <ActionButton
+          text="Battle"
+          baseColor="bg-orange-600"
+          hoverClass="hover:bg-orange-700"
+          disabledClass="disabled:bg-white"
+          enabled={!(gameState.player && gameState.player.defeated)}
+          actionCallback={() => { handleAction(MenuSceneAction.BATTLE); }}
+        />
+        <ActionButton
+          text="Restart"
+          baseColor="bg-gray-600"
+          hoverClass="hover:bg-gray-700"
+          disabledClass="disabled:bg-white"
+          enabled={true}
+          actionCallback={() => { handleAction(MenuSceneAction.RESTART); }}
+        />
       </>
     );
   }
