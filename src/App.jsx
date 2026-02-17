@@ -26,7 +26,7 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
         flex-col
         justify-center"
         onClick={() => {
-          handleAction(GameAction.ATTACK_STEP_2, {
+          handleAction(GameAction.SELECT_ENEMY, {
             attackedEnemyIndex: index
           });
         }}
@@ -142,7 +142,7 @@ const RPGInterface = () => {
   };
 
   let buttonOptions;
-  if (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_ATTACK) {
+  if (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY) {
     buttonOptions = (
       <>
         {/* TODO Add back the keys */}
@@ -154,10 +154,10 @@ const RPGInterface = () => {
           disabledBgClass="disabled:bg-red-gray"
           disabledClass="disabled:text-gray-400"
           enabled={gameState.gameScene === GameScene.BATTLE_BASE}
-          actionCallback={() => { handleAction(GameAction.ATTACK_STEP_1); }}
+          actionCallback={() => { handleAction(GameAction.ATTACK); }}
         />
         {
-          gameState.gameScene === GameScene.BATTLE_ATTACK ?
+          gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY ?
             // TODO Add disabled colors (including background and text) to all buttons except the first
             // And possibly make the disabled text class just a constant color instead of a prop here
             <ActionButton
@@ -316,7 +316,7 @@ const RPGInterface = () => {
 
         {/* Health Bars */}
         {
-          (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_ATTACK) && (
+          (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
               <div className="bg-gray-800 rounded-lg p-4">
                 <HealthBar
@@ -332,7 +332,7 @@ const RPGInterface = () => {
                   <HealthBar
                     key={enemy.enemyNum}
                     index={index}
-                    attackable={gameState.gameScene === GameScene.BATTLE_ATTACK}
+                    attackable={gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY}
                     current={enemy.shield}
                     max={ENEMY_SHIELD_MAX}
                     label={`Enemy ${enemy.enemyNum} Health`}
