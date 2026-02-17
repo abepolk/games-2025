@@ -142,7 +142,7 @@ const RPGInterface = () => {
   };
 
   let buttonOptions;
-  if (gameState.gameScene === GameScene.MENU_SCENE) {
+  if (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_ATTACK) {
     buttonOptions = (
       <>
         {/* TODO Add back the keys */}
@@ -156,7 +156,7 @@ const RPGInterface = () => {
           actionCallback={() => { handleAction(GameAction.ATTACK_STEP_1); }}
         />
         {
-          gameState.attackStep2 ?
+          gameState.gameScene === GameScene.BATTLE_ATTACK ?
             // TODO Add disabled colors (including background and text) to all buttons except the first
             // And possibly make the disabled text class just a constant color instead of a prop here
             <ActionButton
