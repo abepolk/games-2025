@@ -153,7 +153,7 @@ const RPGInterface = () => {
           hoverClass="hover:bg-red-900"
           disabledBgClass="disabled:bg-red-gray"
           disabledClass="disabled:text-gray-400"
-          enabled={gameState.gameScene === GameAction.BATTLE_BASE}
+          enabled={gameState.gameScene === GameScene.BATTLE_BASE}
           actionCallback={() => { handleAction(GameAction.ATTACK_STEP_1); }}
         />
         {
