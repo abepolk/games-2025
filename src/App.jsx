@@ -147,12 +147,13 @@ const RPGInterface = () => {
       <>
         {/* TODO Add back the keys */}
         <ActionButton
+          key="attack-button"
           text="Attack"
           baseColor="bg-red-800"
           hoverClass="hover:bg-red-900"
           disabledBgClass="disabled:bg-red-gray"
           disabledClass="disabled:text-gray-400"
-          enabled={!gameState.attackStep2}
+          enabled={gameState.gameScene === GameAction.BATTLE_BASE}
           actionCallback={() => { handleAction(GameAction.ATTACK_STEP_1); }}
         />
         {
@@ -160,6 +161,7 @@ const RPGInterface = () => {
             // TODO Add disabled colors (including background and text) to all buttons except the first
             // And possibly make the disabled text class just a constant color instead of a prop here
             <ActionButton
+              key="cancel-button"
               text="Cancel Attack"
               baseColor="bg-zinc-600"
               hoverClass="hover:bg-zinc-700"
@@ -168,6 +170,7 @@ const RPGInterface = () => {
               actionCallback={() => { handleAction(GameAction.CANCEL_ATTACK); }}
             />
             : <ActionButton
+              key="defend-button"
               text="Defend"
               baseColor="bg-indigo-800"
               hoverClass="hover:bg-indigo-900"
@@ -183,6 +186,7 @@ const RPGInterface = () => {
       <>
         {!(gameState.player && gameState.player.defeated) &&
           <ActionButton
+            key="battle-button"
             text="Battle"
             baseColor="bg-orange-600"
             hoverClass="hover:bg-orange-700"
@@ -193,6 +197,7 @@ const RPGInterface = () => {
           />
         }
         <ActionButton
+          key="restart-button"
           text="Restart"
           baseColor="bg-gray-600"
           hoverClass="hover:bg-gray-700"
