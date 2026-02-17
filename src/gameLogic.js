@@ -169,6 +169,56 @@ const updateState = ({ action, state, options }) => {
     }
   };
 
+  const attack = (localState, localOptions) => {
+    const damage = weaponAttackDamage(localState.player.weapon);
+    const attackedEnemyIndex = localOptions.attackedEnemyIndex
+    console.assert(attackedEnemyIndex !== undefined);
+    const enemy = localState.enemies[attackedEnemyIndex];
+    applyEnemyDamage(enemy, damage);
+    localState.messages.push(`Player attacks for ${damage} damage!`);
+    if (enemy.defeated) {
+      debugPrintStatus();
+      localState.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
+      localState.enemiesDefeated = localState.enemiesDefeated + 1;
+      localState.enemies.splice(attackedEnemyIndex, 1);
+      if (localState.enemies.length > 0) {
+        let compatibleWeapon;
+        if (enemy.weapon.kind === WeaponKind.DAGGER) {
+          compatibleWeapon = WeaponKind.STICK;
+        } else if (enemy.weapon.kind === WeaponKind.STICK) {
+          compatibleWeapon = WeaponKind.DAGGER;
+        } else if (enemy.weapon.kind === WeaponKind.SPEAR) {
+          compatibleWeapon = null;
+        } else {
+          throw "Weapon kind not found when looking for a compatible weapon";
+        }
+        const enemiesCanTransfer = localState.enemies.filter(enemy => {
+          return enemy.weapon.kind === compatibleWeapon;
+        });
+        if (enemiesCanTransfer.length > 0) {
+          const weaponRecipient = selectRandomElement(enemiesCanTransfer);
+          const oldWeapon = weaponRecipient.weapon;
+          weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
+          localState.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
+        }
+      }
+    }
+    if (localState.enemies.length === 0) {
+      const rechargeBonus = 5 + Math.floor(enemy.level / 5);
+      rechargePlayerShield(localState.player, rechargeBonus);
+      localState.messages.push(
+        `Player healed by ${rechargeBonus}.`
+      );
+      localState.battlesWon++;
+      localState.gameScene = GameScene.MENU_SCENE;
+    } else {
+      enemyAttack(localState);
+      if (!localState.player.defeated) {
+        localState.gameScene = GameScene.BATTLE_BASE;
+      }
+    }
+  }
+
   console.log(state.gameScene);
   console.log(action);
   switch (action) {
@@ -225,53 +275,11 @@ const updateState = ({ action, state, options }) => {
     case GameAction.SELECT_ENEMY:
       checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY])
 
-      const damage = weaponAttackDamage(state.player.weapon);
-      const attackedEnemyIndex = options.attackedEnemyIndex
-      console.assert(attackedEnemyIndex !== undefined);
-      const enemy = state.enemies[attackedEnemyIndex];
-      applyEnemyDamage(enemy, damage);
-      state.messages.push(`Player attacks for ${damage} damage!`);
-      if (enemy.defeated) {
-        debugPrintStatus();
-        state.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
-        state.enemiesDefeated = state.enemiesDefeated + 1;
-        state.enemies.splice(attackedEnemyIndex, 1);
-        if (state.enemies.length > 0) {
-          var compatibleWeapon;
-          if (enemy.weapon.kind === WeaponKind.DAGGER) {
-            compatibleWeapon = WeaponKind.STICK;
-          } else if (enemy.weapon.kind === WeaponKind.STICK) {
-            compatibleWeapon = WeaponKind.DAGGER;
-          } else if (enemy.weapon.kind === WeaponKind.SPEAR) {
-            compatibleWeapon = null;
-          } else {
-            throw "Weapon kind not found when looking for a compatible weapon";
-          }
-          const enemiesCanTransfer = state.enemies.filter(enemy => {
-            return enemy.weapon.kind === compatibleWeapon;
-          });
-          if (enemiesCanTransfer.length > 0) {
-            const weaponRecipient = selectRandomElement(enemiesCanTransfer);
-            const oldWeapon = weaponRecipient.weapon;
-            weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
-            state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
-          }
-        }
-      }
-      if (state.enemies.length === 0) {
-        const rechargeBonus = 5 + Math.floor(enemy.level / 5);
-        rechargePlayerShield(state.player, rechargeBonus);
-        state.messages.push(
-          `Player healed by ${rechargeBonus}.`
-        );
-        state.battlesWon++;
-        state.gameScene = GameScene.MENU_SCENE;
-      } else {
-        enemyAttack(state);
-        if (!state.player.defeated) {
-          state.gameScene = GameScene.BATTLE_BASE;
-        }
-      }
+      // TODO: will need to pass in which attack we're doing, which we
+      // discussed determining via an option when sending
+      // the BATTLE_SELECT_ATTACK action
+      attack(state, options);
+
       break;
     default:
       throw `Unknown Action ${action}`;
