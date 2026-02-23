@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
-import daggerIcon from './dagger.svg';
-import stickIcon from './stick.svg';
-import spearIcon from './spear.svg';
-import './App.css'
+import { useState, useRef, useEffect } from "react";
+import daggerIcon from "./dagger.svg";
+import stickIcon from "./stick.svg";
+import spearIcon from "./spear.svg";
+import "./App.css";
 
 import {
   GameScene,
@@ -12,19 +12,22 @@ import {
   WeaponKind,
   initGame,
   updateState
-} from './gameLogic.js'
+} from "./gameLogic.js";
 
 const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, handleAction }) => (
   <div className="flex">
     {attackable && (
-      <button className="bg-gray-600
-        hover:bg-gray-700
-        rounded-lg
-        px-4
-        mr-4
-        flex
-        flex-col
-        justify-center"
+      <button
+        className="
+          bg-gray-600
+          hover:bg-gray-700
+          rounded-lg
+          px-4
+          mr-4
+          flex
+          flex-col
+          justify-center
+        "
         onClick={() => {
           handleAction(GameAction.ATTACK_STEP_2, {
             attackedEnemyIndex: index
@@ -37,7 +40,11 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
     <div className="grow">
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-gray-300">{label}</span>
-        <span className="text-sm text-gray-400">{current}/{max}</span>
+        <span className="text-sm text-gray-400">
+          {current}
+          /
+          {max}
+        </span>
       </div>
       <div className="w-full bg-gray-700 rounded-full h-3">
         <div
@@ -58,7 +65,6 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
     )}
   </div>
 );
-
 
 const ActionButton = ({
   text,
@@ -90,14 +96,13 @@ const ActionButton = ({
     duration-100
     `}
     disabled={!enabled}
-    onClick={actionCallback}>
+    onClick={actionCallback}
+  >
     {text}
   </button>
-)
-
+);
 
 const RPGInterface = () => {
-
   const [helpHovered, setHelpHovered] = useState(false);
   const [helpClicked, setHelpClicked] = useState(false);
 
@@ -114,7 +119,7 @@ const RPGInterface = () => {
       const localState = structuredClone(prevState);
       initGame(localState);
       return localState;
-    })
+    });
   }, []);
 
   useEffect(() => {
@@ -133,7 +138,8 @@ const RPGInterface = () => {
       const state = structuredClone(prevState);
       try {
         return updateState({ action, state, options });
-      } catch (error) {
+      }
+      catch (error) {
         console.error(error);
         state.messages.push(`Error: ${error}`);
         return state;
@@ -157,44 +163,51 @@ const RPGInterface = () => {
           actionCallback={() => { handleAction(GameAction.ATTACK_STEP_1); }}
         />
         {
-          gameState.gameScene === GameScene.BATTLE_ATTACK ?
+          gameState.gameScene === GameScene.BATTLE_ATTACK
             // TODO Add disabled colors (including background and text) to all buttons except the first
             // And possibly make the disabled text class just a constant color instead of a prop here
-            <ActionButton
-              key="cancel-button"
-              text="Cancel Attack"
-              baseColor="bg-zinc-600"
-              hoverClass="hover:bg-zinc-700"
-              disabledClass="disabled:bg-white"
-              enabled={true}
-              actionCallback={() => { handleAction(GameAction.CANCEL_ATTACK); }}
-            />
-            : <ActionButton
-              key="defend-button"
-              text="Defend"
-              baseColor="bg-indigo-800"
-              hoverClass="hover:bg-indigo-900"
-              disabledClass="disabled:bg-white"
-              enabled={true}
-              actionCallback={() => { handleAction(GameAction.SHIELD); }}
-            />
+            ? (
+              <ActionButton
+                key="cancel-button"
+                text="Cancel Attack"
+                baseColor="bg-zinc-600"
+                hoverClass="hover:bg-zinc-700"
+                disabledClass="disabled:bg-white"
+                enabled={true}
+                actionCallback={() => { handleAction(GameAction.CANCEL_ATTACK); }}
+              />
+            )
+            : (
+              <ActionButton
+                key="defend-button"
+                text="Defend"
+                baseColor="bg-indigo-800"
+                hoverClass="hover:bg-indigo-900"
+                disabledClass="disabled:bg-white"
+                enabled={true}
+                actionCallback={() => { handleAction(GameAction.SHIELD); }}
+              />
+            )
         }
       </>
     );
-  } else {
+  }
+  else {
     buttonOptions = (
       <>
-        {!(gameState.player && gameState.player.defeated) &&
-          <ActionButton
-            key="battle-button"
-            text="Battle"
-            baseColor="bg-orange-600"
-            hoverClass="hover:bg-orange-700"
-            disabledBgClass="disabled:bg-orange-gray"
-            disabledClass="disabled:text-gray-400"
-            enabled={true}
-            actionCallback={() => { handleAction(GameAction.BATTLE); }}
-          />
+        {!(gameState.player && gameState.player.defeated)
+          && (
+            <ActionButton
+              key="battle-button"
+              text="Battle"
+              baseColor="bg-orange-600"
+              hoverClass="hover:bg-orange-700"
+              disabledBgClass="disabled:bg-orange-gray"
+              disabledClass="disabled:text-gray-400"
+              enabled={true}
+              actionCallback={() => { handleAction(GameAction.BATTLE); }}
+            />
+          )
         }
         <ActionButton
           key="restart-button"
@@ -217,19 +230,22 @@ const RPGInterface = () => {
         {/* Header */}
         <h1 className="text-3xl text-center font-bold text-gray-100 mb-8">React Tactics</h1>
 
-        <div className="items-center
-                    fixed
-                    top-6 right-6
-                    flex h-[1.2lh]
-                    w-[1.2lh]
-                    shrink-0
-                    justify-center
-                    rounded-full
-                    font-[Arial]
-                    text-2xl
-                    text-gray-100
-                    bg-[#2e406b]
-                    hover:bg-[#2e4680]"
+        <div
+          className="
+            items-center
+            fixed
+            top-6 right-6
+            flex h-[1.2lh]
+            w-[1.2lh]
+            shrink-0
+            justify-center
+            rounded-full
+            font-[Arial]
+            text-2xl
+            text-gray-100
+            bg-[#2e406b]
+            hover:bg-[#2e4680]
+          "
           onMouseEnter={() => setHelpHovered(true)}
           onMouseLeave={() => setHelpHovered(false)}
           onClick={() => setHelpClicked(clicked => !clicked)}
@@ -237,26 +253,30 @@ const RPGInterface = () => {
           ?
         </div>
 
-        <div className={`fixed
-          top-1/2
-          left-1/2
-          w-3/4
-          lg:w-2/3
-          -translate-x-1/2
-          -translate-y-1/2
-          bg-[#2e406b]
-          leading-relaxed
-          p-8
-          rounded-lg
-          text-md
-          lg:text-lg
-          max-w-2xl
-          ${helpHovered ? "lg:block lg:opacity-100" : "lg:hidden lg:opacity-0"}
-          ${helpClicked ? "" : "hidden opacity-0"}
-          transition
-          transition-discrete
-          starting:opacity-0
-          duration-1000`}>
+        <div
+          className={`
+            fixed
+            top-1/2
+            left-1/2
+            w-3/4
+            lg:w-2/3
+            -translate-x-1/2
+            -translate-y-1/2
+            bg-[#2e406b]
+            leading-relaxed
+            p-8
+            rounded-lg
+            text-md
+            lg:text-lg
+            max-w-2xl
+            ${helpHovered ? "lg:block lg:opacity-100" : "lg:hidden lg:opacity-0"}
+            ${helpClicked ? "" : "hidden opacity-0"}
+            transition
+            transition-discrete
+            starting:opacity-0
+            duration-1000
+          `}
+        >
           <div className="mb-4">
             <p>
               Win as many battles as you can before being defeated!
@@ -349,11 +369,11 @@ const RPGInterface = () => {
         {/* Command Buttons */}
         <div className="space-y-4">
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-            <h3 className="text-sm font-medium text-gray-300 mb-4">{!(gameState.gameScene === GameScene.MENU_SCENE) ? 'Combat Actions' : 'Game Options'}</h3>
+            <h3 className="text-sm font-medium text-gray-300 mb-4">{!(gameState.gameScene === GameScene.MENU_SCENE) ? "Combat Actions" : "Game Options"}</h3>
             <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
               {buttonOptions}
-            </div >
-          </div >
+            </div>
+          </div>
 
           {/* <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
               <h3 className="text-sm font-medium text-gray-300 mb-4">General Actions</h3>
@@ -369,8 +389,8 @@ const RPGInterface = () => {
                 </button>
               </div>
             </div> */}
-        </div >
-      </div >
+        </div>
+      </div>
 
       {/* <style jsx>{` */}
       {/* <style>
@@ -382,7 +402,7 @@ const RPGInterface = () => {
           animation: fade-in 0.3s ease-out forwards;
         }
       </style> */}
-    </div >
+    </div>
   );
 };
 

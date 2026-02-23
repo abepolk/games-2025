@@ -17,7 +17,7 @@ const GameAction = Object.freeze({
   ATTACK_STEP_1: "ATTACK_STEP_1",
   ATTACK_STEP_2: "ATTACK_STEP_2",
   SHIELD: "SHIELD",
-  CANCEL_ATTACK: "CANCEL_ATTACK",
+  CANCEL_ATTACK: "CANCEL_ATTACK"
 });
 
 const WeaponKind = Object.freeze({
@@ -59,7 +59,7 @@ const initGame = (state) => {
       bonusDamageMax: 2
     }
   };
-  state.enemies = []
+  state.enemies = [];
   state.enemiesDefeated = 0;
   state.battlesWon = 0;
 };
@@ -68,10 +68,9 @@ const checkScene = (attemptedAction, currentScene, allowedScenes) => {
   if (!allowedScenes.includes(currentScene)) {
     throw `Action ${attemptedAction} not allowed from Scene ${currentScene}`;
   }
-}
+};
 
 const updateState = ({ action, state, options }) => {
-
   const rechargePlayerShield = (player, amount) => {
     player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
   };
@@ -86,13 +85,15 @@ const updateState = ({ action, state, options }) => {
       if (enemy === null) {
         console.error(`Enemy ${index} is null`);
         result.push(`Enemy ${index} is null`);
-      } else if (enemy.defeated) {
+      }
+      else if (enemy.defeated) {
         result.push(`Enemy ${index} has been defeated`);
-      } else {
+      }
+      else {
         result.push(`Enemy ${index} Shield: ${enemy.shield}/${ENEMY_SHIELD_MAX}`);
       }
     });
-    console.log(result.join('\n'));
+    console.log(result.join("\n"));
   };
 
   const createWeapon = (level, kind) => {
@@ -121,14 +122,15 @@ const updateState = ({ action, state, options }) => {
       weapon: createWeapon(level, kind),
       shield: ENEMY_SHIELD_MAX,
       defeated: false
-    }
+    };
   };
 
   const applyEnemyDamage = (enemy, amount) => {
     if (amount >= enemy.shield) {
       enemy.defeated = true;
       enemy.shield = 0;
-    } else {
+    }
+    else {
       enemy.shield = enemy.shield - amount;
       console.assert(enemy.shield > 0);
     }
@@ -158,9 +160,10 @@ const updateState = ({ action, state, options }) => {
 
   const applyPlayerDamage = (player, amount) => {
     if (amount >= player.shield) {
-      player.defeated = true
+      player.defeated = true;
       player.shield = 0;
-    } else {
+    }
+    else {
       const newShieldAmount = player.shield - amount;
       player.shield = newShieldAmount;
       console.assert(player.shield > 0);
@@ -170,7 +173,7 @@ const updateState = ({ action, state, options }) => {
   console.log(state.gameScene);
   console.log(action);
   switch (action) {
-    case GameAction.RESTART:
+    case GameAction.RESTART: {
       checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
 
       state.gameScene = GameScene.MENU_SCENE;
@@ -179,18 +182,20 @@ const updateState = ({ action, state, options }) => {
       debugPrintStatus();
 
       break;
-    case GameAction.BATTLE:
+    }
+    case GameAction.BATTLE: {
       checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
 
       if (state.player.defeated) {
         state.messages.push("Player was defeated. Click Restart to start a new game.");
-      } else {
+      }
+      else {
         const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
         state.enemies = [
           undefined,
           undefined,
           undefined
-        ].map(_ => {
+        ].map((_) => {
           const weapon = selectRandomElement(initialWeapons);
           return createEnemy(state.battlesWon, weapon);
         });
@@ -199,14 +204,16 @@ const updateState = ({ action, state, options }) => {
       }
 
       break;
-    case GameAction.ATTACK_STEP_1:
+    }
+    case GameAction.ATTACK_STEP_1: {
       checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
 
       state.gameScene = GameScene.BATTLE_ATTACK;
 
       break;
-    case GameAction.SHIELD:
-      checkScene(action, state.gameScene, [GameScene.BATTLE_BASE])
+    }
+    case GameAction.SHIELD: {
+      checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
 
       const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
       rechargePlayerShield(state.player, recharge);
@@ -214,17 +221,19 @@ const updateState = ({ action, state, options }) => {
       enemyAttack(state);
 
       break;
-    case GameAction.CANCEL_ATTACK:
-      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK])
+    }
+    case GameAction.CANCEL_ATTACK: {
+      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK]);
 
       state.gameScene = GameScene.BATTLE_BASE;
 
       break;
-    case GameAction.ATTACK_STEP_2:
-      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK])
+    }
+    case GameAction.ATTACK_STEP_2: {
+      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK]);
 
       const damage = weaponAttackDamage(state.player.weapon);
-      const attackedEnemyIndex = options.attackedEnemyIndex
+      const attackedEnemyIndex = options.attackedEnemyIndex;
       console.assert(attackedEnemyIndex !== undefined);
       const enemy = state.enemies[attackedEnemyIndex];
       applyEnemyDamage(enemy, damage);
@@ -238,14 +247,17 @@ const updateState = ({ action, state, options }) => {
           var compatibleWeapon;
           if (enemy.weapon.kind === WeaponKind.DAGGER) {
             compatibleWeapon = WeaponKind.STICK;
-          } else if (enemy.weapon.kind === WeaponKind.STICK) {
+          }
+          else if (enemy.weapon.kind === WeaponKind.STICK) {
             compatibleWeapon = WeaponKind.DAGGER;
-          } else if (enemy.weapon.kind === WeaponKind.SPEAR) {
+          }
+          else if (enemy.weapon.kind === WeaponKind.SPEAR) {
             compatibleWeapon = null;
-          } else {
+          }
+          else {
             throw "Weapon kind not found when looking for a compatible weapon";
           }
-          const enemiesCanTransfer = state.enemies.filter(enemy => {
+          const enemiesCanTransfer = state.enemies.filter((enemy) => {
             return enemy.weapon.kind === compatibleWeapon;
           });
           if (enemiesCanTransfer.length > 0) {
@@ -264,20 +276,22 @@ const updateState = ({ action, state, options }) => {
         );
         state.battlesWon++;
         state.gameScene = GameScene.MENU_SCENE;
-      } else {
+      }
+      else {
         enemyAttack(state);
         if (!state.player.defeated) {
           state.gameScene = GameScene.BATTLE_BASE;
         }
       }
       break;
-    default:
+    }
+    default: {
       throw `Unknown Action ${action}`;
-
+    }
   }
 
   return state;
-}
+};
 
 export {
   GameScene,
