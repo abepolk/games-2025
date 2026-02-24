@@ -44,7 +44,8 @@ export default defineConfig([
           offsetTernaryExpressions: false,
           SwitchCase: 1
         }
-      ]
+      ],
+      "@stylistic/brace-style": ["error", "1tbs"]
     }
   }
 ]);

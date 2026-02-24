@@ -85,11 +85,9 @@ const updateState = ({ action, state, options }) => {
       if (enemy === null) {
         console.error(`Enemy ${index} is null`);
         result.push(`Enemy ${index} is null`);
-      }
-      else if (enemy.defeated) {
+      } else if (enemy.defeated) {
         result.push(`Enemy ${index} has been defeated`);
-      }
-      else {
+      } else {
         result.push(`Enemy ${index} Shield: ${enemy.shield}/${ENEMY_SHIELD_MAX}`);
       }
     });
@@ -129,8 +127,7 @@ const updateState = ({ action, state, options }) => {
     if (amount >= enemy.shield) {
       enemy.defeated = true;
       enemy.shield = 0;
-    }
-    else {
+    } else {
       enemy.shield = enemy.shield - amount;
       console.assert(enemy.shield > 0);
     }
@@ -162,8 +159,7 @@ const updateState = ({ action, state, options }) => {
     if (amount >= player.shield) {
       player.defeated = true;
       player.shield = 0;
-    }
-    else {
+    } else {
       const newShieldAmount = player.shield - amount;
       player.shield = newShieldAmount;
       console.assert(player.shield > 0);
@@ -188,8 +184,7 @@ const updateState = ({ action, state, options }) => {
 
       if (state.player.defeated) {
         state.messages.push("Player was defeated. Click Restart to start a new game.");
-      }
-      else {
+      } else {
         const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
         state.enemies = [
           undefined,
@@ -247,14 +242,11 @@ const updateState = ({ action, state, options }) => {
           var compatibleWeapon;
           if (enemy.weapon.kind === WeaponKind.DAGGER) {
             compatibleWeapon = WeaponKind.STICK;
-          }
-          else if (enemy.weapon.kind === WeaponKind.STICK) {
+          } else if (enemy.weapon.kind === WeaponKind.STICK) {
             compatibleWeapon = WeaponKind.DAGGER;
-          }
-          else if (enemy.weapon.kind === WeaponKind.SPEAR) {
+          } else if (enemy.weapon.kind === WeaponKind.SPEAR) {
             compatibleWeapon = null;
-          }
-          else {
+          } else {
             throw "Weapon kind not found when looking for a compatible weapon";
           }
           const enemiesCanTransfer = state.enemies.filter((enemy) => {
@@ -276,8 +268,7 @@ const updateState = ({ action, state, options }) => {
         );
         state.battlesWon++;
         state.gameScene = GameScene.MENU_SCENE;
-      }
-      else {
+      } else {
         enemyAttack(state);
         if (!state.player.defeated) {
           state.gameScene = GameScene.BATTLE_BASE;

@@ -138,8 +138,7 @@ const RPGInterface = () => {
       const state = structuredClone(prevState);
       try {
         return updateState({ action, state, options });
-      }
-      catch (error) {
+      } catch (error) {
         console.error(error);
         state.messages.push(`Error: ${error}`);
         return state;
@@ -160,7 +159,9 @@ const RPGInterface = () => {
           disabledBgClass="disabled:bg-red-gray"
           disabledClass="disabled:text-gray-400"
           enabled={gameState.gameScene === GameScene.BATTLE_BASE}
-          actionCallback={() => { handleAction(GameAction.ATTACK_STEP_1); }}
+          actionCallback={() => {
+            handleAction(GameAction.ATTACK_STEP_1);
+          }}
         />
         {
           gameState.gameScene === GameScene.BATTLE_ATTACK
@@ -174,7 +175,9 @@ const RPGInterface = () => {
                 hoverClass="hover:bg-zinc-700"
                 disabledClass="disabled:bg-white"
                 enabled={true}
-                actionCallback={() => { handleAction(GameAction.CANCEL_ATTACK); }}
+                actionCallback={() => {
+                  handleAction(GameAction.CANCEL_ATTACK);
+                }}
               />
             )
             : (
@@ -185,14 +188,15 @@ const RPGInterface = () => {
                 hoverClass="hover:bg-indigo-900"
                 disabledClass="disabled:bg-white"
                 enabled={true}
-                actionCallback={() => { handleAction(GameAction.SHIELD); }}
+                actionCallback={() => {
+                  handleAction(GameAction.SHIELD);
+                }}
               />
             )
         }
       </>
     );
-  }
-  else {
+  } else {
     buttonOptions = (
       <>
         {!(gameState.player && gameState.player.defeated)
@@ -205,7 +209,9 @@ const RPGInterface = () => {
               disabledBgClass="disabled:bg-orange-gray"
               disabledClass="disabled:text-gray-400"
               enabled={true}
-              actionCallback={() => { handleAction(GameAction.BATTLE); }}
+              actionCallback={() => {
+                handleAction(GameAction.BATTLE);
+              }}
             />
           )}
         <ActionButton
@@ -216,7 +222,9 @@ const RPGInterface = () => {
           disabledClass="disabled:bg-white"
           spanWholeWidth={gameState.player && gameState.player.defeated}
           enabled={true}
-          actionCallback={() => { handleAction(GameAction.RESTART); }}
+          actionCallback={() => {
+            handleAction(GameAction.RESTART);
+          }}
         />
       </>
     );
