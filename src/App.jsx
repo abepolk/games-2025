@@ -207,8 +207,7 @@ const RPGInterface = () => {
               enabled={true}
               actionCallback={() => { handleAction(GameAction.BATTLE); }}
             />
-          )
-        }
+          )}
         <ActionButton
           key="restart-button"
           text="Restart"

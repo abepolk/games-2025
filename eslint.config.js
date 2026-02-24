@@ -29,7 +29,22 @@ export default defineConfig([
       }
     },
     rules: {
-      "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }]
+      "no-unused-vars": [
+        "error",
+        {
+          // This varsIgnorePattern is here because ESLint can't see that a declared component is used in JSX
+          varsIgnorePattern: "^[A-Z_]",
+          argsIgnorePattern: "^_$"
+        }
+      ],
+      "@stylistic/indent": [
+        "error",
+        2,
+        {
+          offsetTernaryExpressions: false,
+          SwitchCase: 1
+        }
+      ]
     }
   }
 ]);
