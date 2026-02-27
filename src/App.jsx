@@ -147,10 +147,10 @@ const RPGInterface = () => {
   };
 
   let buttonOptions;
-  if (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY) {
+  if (gameState.gameScene === GameScene.BATTLE_BASE) {
+    // Attack and Defend buttons
     buttonOptions = (
       <>
-        {/* TODO Add back the keys */}
         <ActionButton
           key="attack-button"
           text="Attack"
@@ -163,40 +163,65 @@ const RPGInterface = () => {
             handleAction(GameAction.ATTACK);
           }}
         />
-        {
-          gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY
-            // TODO Add disabled colors (including background and text) to all buttons except the first
-            // And possibly make the disabled text class just a constant color instead of a prop here
-            ? (
-              <ActionButton
-                key="cancel-button"
-                text="Cancel Attack"
-                baseColor="bg-zinc-600"
-                hoverClass="hover:bg-zinc-700"
-                disabledClass="disabled:bg-white"
-                enabled={true}
-                actionCallback={() => {
-                  handleAction(GameAction.CANCEL_ATTACK);
-                }}
-              />
-            )
-            : (
-              <ActionButton
-                key="defend-button"
-                text="Defend"
-                baseColor="bg-indigo-800"
-                hoverClass="hover:bg-indigo-900"
-                disabledClass="disabled:bg-white"
-                enabled={true}
-                actionCallback={() => {
-                  handleAction(GameAction.SHIELD);
-                }}
-              />
-            )
-        }
+        <ActionButton
+          key="defend-button"
+          text="Defend"
+          baseColor="bg-indigo-800"
+          hoverClass="hover:bg-indigo-900"
+          disabledClass="disabled:bg-white"
+          enabled={true}
+          actionCallback={() => {
+            handleAction(GameAction.SHIELD);
+          }}
+        />
+      </>
+    );
+  } else if (gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK || gameState.gameScene == GameScene.BATTLE_SELECT_ENEMY) {
+    // Attack options and Canceled
+    // Attack options are disabled if BATTLE_SELECT_ENEMY
+    buttonOptions = (
+      <>
+        <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
+          <ActionButton
+            key="att-1-button"
+            text="Att-1"
+            baseColor="bg-red-800"
+            hoverClass="hover:bg-red-900"
+            disabledBgClass="disabled:bg-red-gray"
+            disabledClass="disabled:text-gray-400"
+            enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK}
+            actionCallback={() => {
+              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: 1 });
+            }}
+          />
+          <ActionButton
+            key="att-2-button"
+            text="Att-2"
+            baseColor="bg-red-800"
+            hoverClass="hover:bg-red-900"
+            disabledBgClass="disabled:bg-red-gray"
+            disabledClass="disabled:text-gray-400"
+            enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK}
+            actionCallback={() => {
+              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: 2 });
+            }}
+          />
+        </div>
+        <ActionButton
+          key="cancel-button"
+          text="Cancel Attack"
+          baseColor="bg-zinc-600"
+          hoverClass="hover:bg-zinc-700"
+          disabledClass="disabled:bg-white"
+          enabled={true}
+          actionCallback={() => {
+            handleAction(GameAction.CANCEL_ATTACK);
+          }}
+        />
       </>
     );
   } else {
+    // Battle and Restart buttons
     buttonOptions = (
       <>
         {!(gameState.player && gameState.player.defeated)
@@ -343,7 +368,7 @@ const RPGInterface = () => {
 
         {/* Health Bars */}
         {
-          (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY) && (
+          (gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK || gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 space-x">
               <div className="bg-gray-800 rounded-lg p-4">
                 <HealthBar

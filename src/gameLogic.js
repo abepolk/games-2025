@@ -255,10 +255,7 @@ const updateState = ({ action, state, options }) => {
     case GameAction.ATTACK: {
       checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
 
-      // We're not using BATTLE_SELECT_ATTACK yet so this allows the game to
-      // work with the updated enums.
-      state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
-      // state.gameScene = GameScene.BATTLE_SELECT_ATTACK;
+      state.gameScene = GameScene.BATTLE_SELECT_ATTACK;
 
       break;
     }
@@ -273,9 +270,17 @@ const updateState = ({ action, state, options }) => {
       break;
     }
     case GameAction.CANCEL_ATTACK: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
+      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK, GameScene.BATTLE_SELECT_ENEMY]);
 
       state.gameScene = GameScene.BATTLE_BASE;
+
+      break;
+    }
+    case GameAction.SELECT_ATTACK_KIND: {
+      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK]);
+
+      // TODO: persist attack kind until enemy is selected...
+      state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
 
       break;
     }
