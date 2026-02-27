@@ -8,14 +8,16 @@ const ENEMY_SHIELD_MAX = 20;
 const GameScene = Object.freeze({
   MENU_SCENE: "MENU_SCENE",
   BATTLE_BASE: "BATTLE_BASE",
-  BATTLE_ATTACK: "BATTLE_ATTACK"
+  BATTLE_SELECT_ATTACK: "BATTLE_SELECT_ATTACK",
+  BATTLE_SELECT_ENEMY: "BATTLE_SELECT_ENEMY"
 });
 
 const GameAction = Object.freeze({
   BATTLE: "BATTLE",
   RESTART: "RESTART",
-  ATTACK_STEP_1: "ATTACK_STEP_1",
-  ATTACK_STEP_2: "ATTACK_STEP_2",
+  ATTACK: "ATTACK",
+  SELECT_ATTACK_KIND: "SELECT_ATTACK_KIND",
+  SELECT_ENEMY: "SELECT_ENEMY",
   SHIELD: "SHIELD",
   CANCEL_ATTACK: "CANCEL_ATTACK"
 });
@@ -200,10 +202,13 @@ const updateState = ({ action, state, options }) => {
 
       break;
     }
-    case GameAction.ATTACK_STEP_1: {
+    case GameAction.ATTACK: {
       checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
 
-      state.gameScene = GameScene.BATTLE_ATTACK;
+      // We're not using BATTLE_SELECT_ATTACK yet so this allows the game to
+      // work with the updated enums.
+      state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
+      // state.gameScene = GameScene.BATTLE_SELECT_ATTACK;
 
       break;
     }
@@ -218,14 +223,14 @@ const updateState = ({ action, state, options }) => {
       break;
     }
     case GameAction.CANCEL_ATTACK: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK]);
+      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
 
       state.gameScene = GameScene.BATTLE_BASE;
 
       break;
     }
-    case GameAction.ATTACK_STEP_2: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_ATTACK]);
+    case GameAction.SELECT_ENEMY: {
+      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
 
       const damage = weaponAttackDamage(state.player.weapon);
       const attackedEnemyIndex = options.attackedEnemyIndex;
