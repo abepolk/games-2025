@@ -10,6 +10,7 @@ import {
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   WeaponKind,
+  AttackKind,
   initGame,
   updateState
 } from "./gameLogic.js";
@@ -183,27 +184,27 @@ const RPGInterface = () => {
       <>
         <div className="sm:grid sm:grid-cols-2 sm:gap-4 ">
           <ActionButton
-            key="att-1-button"
-            text="Att-1"
+            key="sword-slash-button"
+            text="Sword Slash"
             baseColor="bg-red-800"
             hoverClass="hover:bg-red-900"
             disabledBgClass="disabled:bg-red-gray"
             disabledClass="disabled:text-gray-400"
             enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK}
             actionCallback={() => {
-              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: 1 });
+              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: AttackKind.SWORD_SLASH });
             }}
           />
           <ActionButton
-            key="att-2-button"
-            text="Att-2"
+            key="power-slash-button"
+            text="Power Slash"
             baseColor="bg-red-800"
             hoverClass="hover:bg-red-900"
             disabledBgClass="disabled:bg-red-gray"
             disabledClass="disabled:text-gray-400"
             enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK}
             actionCallback={() => {
-              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: 2 });
+              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: AttackKind.POWER_SLASH });
             }}
           />
         </div>

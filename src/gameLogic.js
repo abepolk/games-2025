@@ -28,6 +28,11 @@ const WeaponKind = Object.freeze({
   SPEAR: "SPEAR"
 });
 
+const AttackKind = Object.freeze({
+  SWORD_SLASH: "SWORD_SLASH",
+  POWER_SLASH: "POWER_SLASH"
+});
+
 const weapons = [
   {
     kind: WeaponKind.DAGGER,
@@ -64,11 +69,33 @@ const initGame = (state) => {
   state.enemies = [];
   state.enemiesDefeated = 0;
   state.battlesWon = 0;
+  state.attackKind = null;
 };
 
 const checkScene = (attemptedAction, currentScene, allowedScenes) => {
   if (!allowedScenes.includes(currentScene)) {
     throw `Action ${attemptedAction} not allowed from Scene ${currentScene}`;
+  }
+};
+
+const checkValidControlFlow = (localState) => {
+  if (!Object.values(AttackKind).includes(localState.attackKind)
+    && localState.attackKind !== null) {
+    throw `Invalid attackKind: ${localState.attackKind}`;
+  }
+  if (!Object.values(GameScene).includes(localState.gameScene)) {
+    throw `Invalid gameScene: ${localState.gameScene}`;
+  }
+  // We already check implicitly for the GameAction with switch case default
+};
+
+// Check that attackKind is not null when it's being used, otherwise null
+const checkValidAttackKind = (attackKind, currentScene) => {
+  if (currentScene === GameScene.BATTLE_SELECT_ENEMY && attackKind === null) {
+    throw `attackKind is null in ${currentScene}.`;
+  }
+  if (currentScene !== GameScene.BATTLE_SELECT_ENEMY && attackKind !== null) {
+    throw `attackKind is not null in ${currentScene}. attackKind is ${attackKind}.`;
   }
 };
 
@@ -181,7 +208,7 @@ const updateState = ({ action, state, options }) => {
       localState.enemiesDefeated = localState.enemiesDefeated + 1;
       localState.enemies.splice(attackedEnemyIndex, 1);
       if (localState.enemies.length > 0) {
-        var compatibleWeapon;
+        let compatibleWeapon;
         if (enemy.weapon.kind === WeaponKind.DAGGER) {
           compatibleWeapon = WeaponKind.STICK;
         } else if (enemy.weapon.kind === WeaponKind.STICK) {
@@ -220,6 +247,10 @@ const updateState = ({ action, state, options }) => {
 
   console.log(state.gameScene);
   console.log(action);
+
+  checkValidControlFlow(state);
+  checkValidAttackKind(state.attackKind, state.gameScene);
+
   switch (action) {
     case GameAction.RESTART: {
       checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
@@ -279,17 +310,16 @@ const updateState = ({ action, state, options }) => {
     case GameAction.SELECT_ATTACK_KIND: {
       checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK]);
 
-      // TODO: persist attack kind until enemy is selected...
       state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
+      state.attackKind = options.attackKind;
 
       break;
     }
     case GameAction.SELECT_ENEMY: {
       checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
 
-      // TODO: will need to pass in which attack we're doing, which we
-      // discussed doing with an option when sending the BATTLE_SELECT_ATTACK action
       attack(state, options);
+      state.attackKind = null;
 
       break;
     }
@@ -307,6 +337,7 @@ export {
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
   WeaponKind,
+  AttackKind,
   initGame,
   updateState
 };
