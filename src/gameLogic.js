@@ -22,10 +22,14 @@ const GameAction = Object.freeze({
   CANCEL_ATTACK: "CANCEL_ATTACK"
 });
 
-const WeaponKind = Object.freeze({
+const EnemyWeaponKind = Object.freeze({
   DAGGER: "DAGGER",
   STICK: "STICK",
   SPEAR: "SPEAR"
+});
+
+const PlayerWeaponKind = Object.freeze({
+  SWORD: "SWORD"
 });
 
 const AttackKind = Object.freeze({
@@ -33,7 +37,31 @@ const AttackKind = Object.freeze({
   POWER_SLASH: "POWER_SLASH"
 });
 
-const weapons = [
+const playerWeapons = [
+  {
+    kind: PlayerWeaponKind.SWORD,
+    attackKinds: [
+      {
+        attackKind: AttackKind.SWORD_SLASH,
+        baseDamage: 3,
+        bonusDamageMin: 0,
+        bonusDamageMax: 2,
+        name: "Sword slash"
+      },
+      {
+        attackKind: AttackKind.POWER_SLASH,
+        baseDamage: 9,
+        bonusDamageMin: 0,
+        bonusDamageMax: 2,
+        name: "Power slash"
+      }
+    ],
+    name: "sword",
+    namePlural: "swords"
+  }
+];
+
+const enemyWeapons = [
   {
     kind: WeaponKind.DAGGER,
     strength: 2,
@@ -60,11 +88,7 @@ const initGame = (state) => {
   state.player = {
     shield: PLAYER_SHIELD_MAX,
     defeated: false,
-    weapon: {
-      baseDamage: 3,
-      bonusDamageMin: 0,
-      bonusDamageMax: 2
-    }
+    weapon: PlayerWeaponKind.SWORD
   };
   state.enemies = [];
   state.enemiesDefeated = 0;
@@ -126,11 +150,11 @@ const updateState = ({ action, state, options }) => {
   const createWeapon = (level, kind) => {
     // Need to make spear damage value not get multiplied by zero
     // TODO level needs to be conceptually separated from battles won
-    const baseDamage = (level + 1) * weapons.find(weapon => weapon.kind === kind).strength;
+    const baseDamage = (level + 1) * enemyWeapons.find(weapon => weapon.kind === kind).strength;
     const bonusDamageMin = 1 + Math.floor(level / 10);
     const bonusDamageMax = 2 + Math.floor(level / 5);
-    const name = weapons.find(weapon => weapon.kind === kind).name;
-    const namePlural = weapons.find(weapon => weapon.kind === kind).namePlural;
+    const name = enemyWeapons.find(weapon => weapon.kind === kind).name;
+    const namePlural = enemyWeapons.find(weapon => weapon.kind === kind).namePlural;
     return {
       kind,
       baseDamage,
@@ -164,7 +188,7 @@ const updateState = ({ action, state, options }) => {
 
   const enemyAttack = (localState) => {
     for (const enemy of localState.enemies) {
-      const enemyDamage = weaponAttackDamage(enemy.weapon);
+      const enemyDamage = enemyWeaponAttackDamage(enemy.weapon);
       applyPlayerDamage(localState.player, enemyDamage);
       localState.messages.push(`Enemy ${enemy.enemyNum} attacks with its ${enemy.weapon.name} for ${enemyDamage} damage!`);
       debugPrintStatus();
@@ -180,9 +204,14 @@ const updateState = ({ action, state, options }) => {
     debugPrintStatus();
   };
 
-  const weaponAttackDamage = (weapon) => {
+  const enemyWeaponAttackDamage = (weapon) => {
     return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
   };
+
+  const playerAttackKindDamage = (attackKindStats) => {
+    return attackKindStats.baseDamage + Math.floor(Math.random() * attackKindStats.bonusDamageMax) + attackKindStats.bonusDamageMin;
+  };
+
 
   const applyPlayerDamage = (player, amount) => {
     if (amount >= player.shield) {
@@ -196,7 +225,14 @@ const updateState = ({ action, state, options }) => {
   };
 
   const attack = (localState, localOptions) => {
-    const damage = weaponAttackDamage(localState.player.weapon);
+    console.log(`We are not using player weapon type yet. It is ${weapon}.`);
+    const playerAttackKindStats = localState.player.weapon.attackKinds.find((kind) => {
+      return kind === localState.attackKind;
+    });
+    if (playerAttackKindStats === undefined) {
+      throw "attackKind not found for the player weapon";
+    }
+    const damage = playerAttackKindDamage(playerAttackKindStats);
     const attackedEnemyIndex = localOptions.attackedEnemyIndex;
     console.assert(attackedEnemyIndex !== undefined);
     const enemy = localState.enemies[attackedEnemyIndex];
@@ -336,7 +372,7 @@ export {
   GameAction,
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
-  WeaponKind,
+  EnemyWeaponKind,
   AttackKind,
   initGame,
   updateState
