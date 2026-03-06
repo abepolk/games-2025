@@ -197,12 +197,12 @@ const RPGInterface = () => {
           />
           <ActionButton
             key="power-slash-button"
-            text="Power Slash"
+            text={gameState.player.powerSlashCooldownRemaining <= 0 ? "Power Slash" : `Cooldown ${gameState.player.powerSlashCooldownRemaining}`}
             baseColor="bg-red-800"
             hoverClass="hover:bg-red-900"
             disabledBgClass="disabled:bg-red-gray"
             disabledClass="disabled:text-gray-400"
-            enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK}
+            enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK && gameState.player.powerSlashCooldownRemaining <= 0}
             actionCallback={() => {
               handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: AttackKind.POWER_SLASH });
             }}
