@@ -53,6 +53,7 @@ const playerWeapons = [
         baseDamage: 9,
         bonusDamageMin: 0,
         bonusDamageMax: 2,
+        cooldownNeeded: 3,
         name: "Power slash"
       }
     ],
@@ -88,7 +89,8 @@ const initGame = (state) => {
   state.player = {
     shield: PLAYER_SHIELD_MAX,
     defeated: false,
-    weaponKind: PlayerWeaponKind.SWORD
+    weaponKind: PlayerWeaponKind.SWORD,
+    powerSlashCooldownRemaining: 0
   };
   state.enemies = [];
   state.enemiesDefeated = 0;
@@ -199,9 +201,6 @@ const updateState = ({ action, state, options }) => {
         return;
       }
     };
-    rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
-    localState.messages.push(`Player heals by ${PLAYER_BASE_SHIELD_RECHARGE}.`);
-    debugPrintStatus();
   };
 
   const enemyWeaponAttackDamage = (weapon) => {
@@ -236,6 +235,13 @@ const updateState = ({ action, state, options }) => {
       });
     if (playerAttackKindStats === undefined) {
       throw "attackKind not found for the player weapon";
+    }
+    if (localState.attackKind === AttackKind.POWER_SLASH) {
+      if (localState.player.powerSlashCooldownRemaining <= 0) {
+        localState.player.powerSlashCooldownRemaining = playerAttackKindStats.cooldownNeeded;
+      } else {
+        throw "attempted to do power attack while cooldown was above 0";
+      }
     }
     const damage = playerAttackKindDamage(playerAttackKindStats);
     const attackedEnemyIndex = localOptions.attackedEnemyIndex;
@@ -287,6 +293,15 @@ const updateState = ({ action, state, options }) => {
         localState.gameScene = GameScene.BATTLE_BASE;
       }
     }
+  };
+
+  const prepareNextTurn = (localState) => {
+    if (localState.player.powerSlashCooldownRemaining > 0) {
+      localState.player.powerSlashCooldownRemaining--;
+    }
+    rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
+    localState.messages.push(`Player heals by ${PLAYER_BASE_SHIELD_RECHARGE}.`);
+    debugPrintStatus();
   };
 
   console.log(state.gameScene);
@@ -341,12 +356,16 @@ const updateState = ({ action, state, options }) => {
       rechargePlayerShield(state.player, recharge);
       state.messages.push(`Focusing energy restored ${recharge} health.`);
       enemyAttack(state);
+      if (!state.player.defeated) {
+        prepareNextTurn(state);
+      }
 
       break;
     }
     case GameAction.CANCEL_ATTACK: {
       checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK, GameScene.BATTLE_SELECT_ENEMY]);
 
+      state.attackKind = null;
       state.gameScene = GameScene.BATTLE_BASE;
 
       break;
@@ -364,6 +383,10 @@ const updateState = ({ action, state, options }) => {
 
       attack(state, options);
       state.attackKind = null;
+
+      if (!state.player.defeated) {
+        prepareNextTurn(state);
+      }
 
       break;
     }
