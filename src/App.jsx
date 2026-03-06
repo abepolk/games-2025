@@ -9,7 +9,7 @@ import {
   GameAction,
   PLAYER_SHIELD_MAX,
   ENEMY_SHIELD_MAX,
-  WeaponKind,
+  EnemyWeaponKind,
   AttackKind,
   initGame,
   updateState
@@ -55,13 +55,13 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
       </div>
     </div>
     {/* Placeholder for dagger, stick and spear icons */}
-    {weaponKind === WeaponKind.DAGGER && (
+    {weaponKind === EnemyWeaponKind.DAGGER && (
       <img src={daggerIcon} className="h-12 w-12" alt="dagger" />
     )}
-    {weaponKind === WeaponKind.STICK && (
+    {weaponKind === EnemyWeaponKind.STICK && (
       <img src={stickIcon} className="h-12 w-12" alt="stick" />
     )}
-    {weaponKind === WeaponKind.SPEAR && (
+    {weaponKind === EnemyWeaponKind.SPEAR && (
       <img src={spearIcon} className="h-12 w-12" alt="spear" />
     )}
   </div>

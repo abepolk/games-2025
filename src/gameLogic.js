@@ -63,19 +63,19 @@ const playerWeapons = [
 
 const enemyWeapons = [
   {
-    kind: WeaponKind.DAGGER,
+    kind: EnemyWeaponKind.DAGGER,
     strength: 2,
     name: "dagger",
     namePlural: "daggers"
   },
   {
-    kind: WeaponKind.STICK,
+    kind: EnemyWeaponKind.STICK,
     strength: 2,
     name: "stick",
     namePlural: "sticks"
   },
   {
-    kind: WeaponKind.SPEAR,
+    kind: EnemyWeaponKind.SPEAR,
     strength: 7,
     name: "spear",
     namePlural: "spears"
@@ -88,7 +88,7 @@ const initGame = (state) => {
   state.player = {
     shield: PLAYER_SHIELD_MAX,
     defeated: false,
-    weapon: PlayerWeaponKind.SWORD
+    weaponKind: PlayerWeaponKind.SWORD
   };
   state.enemies = [];
   state.enemiesDefeated = 0;
@@ -212,7 +212,6 @@ const updateState = ({ action, state, options }) => {
     return attackKindStats.baseDamage + Math.floor(Math.random() * attackKindStats.bonusDamageMax) + attackKindStats.bonusDamageMin;
   };
 
-
   const applyPlayerDamage = (player, amount) => {
     if (amount >= player.shield) {
       player.defeated = true;
@@ -225,10 +224,16 @@ const updateState = ({ action, state, options }) => {
   };
 
   const attack = (localState, localOptions) => {
-    console.log(`We are not using player weapon type yet. It is ${weapon}.`);
-    const playerAttackKindStats = localState.player.weapon.attackKinds.find((kind) => {
-      return kind === localState.attackKind;
+    const playerWeapon = playerWeapons.find((weapon) => {
+      return weapon.kind === localState.player.weaponKind;
     });
+    if (playerWeapon === undefined) {
+      throw "weaponKind not found for the player weapon";
+    }
+    const playerAttackKindStats = playerWeapon.attackKinds.find(
+      (attack) => {
+        return attack.attackKind === localState.attackKind;
+      });
     if (playerAttackKindStats === undefined) {
       throw "attackKind not found for the player weapon";
     }
@@ -244,12 +249,15 @@ const updateState = ({ action, state, options }) => {
       localState.enemiesDefeated = localState.enemiesDefeated + 1;
       localState.enemies.splice(attackedEnemyIndex, 1);
       if (localState.enemies.length > 0) {
+        // TODO: Store just the EnemyWeaponKind in the enemy object
+        // and reference a static list of enemy weapons, to parallel
+        // how we handle player weapons
         let compatibleWeapon;
-        if (enemy.weapon.kind === WeaponKind.DAGGER) {
-          compatibleWeapon = WeaponKind.STICK;
-        } else if (enemy.weapon.kind === WeaponKind.STICK) {
-          compatibleWeapon = WeaponKind.DAGGER;
-        } else if (enemy.weapon.kind === WeaponKind.SPEAR) {
+        if (enemy.weapon.kind === EnemyWeaponKind.DAGGER) {
+          compatibleWeapon = EnemyWeaponKind.STICK;
+        } else if (enemy.weapon.kind === EnemyWeaponKind.STICK) {
+          compatibleWeapon = EnemyWeaponKind.DAGGER;
+        } else if (enemy.weapon.kind === EnemyWeaponKind.SPEAR) {
           compatibleWeapon = null;
         } else {
           throw "Weapon kind not found when looking for a compatible weapon";
@@ -260,7 +268,7 @@ const updateState = ({ action, state, options }) => {
         if (enemiesCanTransfer.length > 0) {
           const weaponRecipient = selectRandomElement(enemiesCanTransfer);
           const oldWeapon = weaponRecipient.weapon;
-          weaponRecipient.weapon = createWeapon(weaponRecipient.level, WeaponKind.SPEAR);
+          weaponRecipient.weapon = createWeapon(weaponRecipient.level, EnemyWeaponKind.SPEAR);
           localState.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
         }
       }
@@ -304,7 +312,7 @@ const updateState = ({ action, state, options }) => {
       if (state.player.defeated) {
         state.messages.push("Player was defeated. Click Restart to start a new game.");
       } else {
-        const initialWeapons = [WeaponKind.DAGGER, WeaponKind.STICK];
+        const initialWeapons = [EnemyWeaponKind.DAGGER, EnemyWeaponKind.STICK];
         state.enemies = [
           undefined,
           undefined,
