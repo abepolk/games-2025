@@ -197,7 +197,7 @@ const RPGInterface = () => {
           />
           <ActionButton
             key="power-slash-button"
-            text={gameState.player.powerSlashCooldownRemaining <= 0 ? "Power Slash" : `Cooldown ${gameState.player.powerSlashCooldownRemaining}`}
+            text={gameState.player.powerSlashCooldownRemaining <= 0 ? "Power Slash" : `Recharging (${gameState.player.powerSlashCooldownRemaining} left)`}
             baseColor="bg-red-800"
             hoverClass="hover:bg-red-900"
             disabledBgClass="disabled:bg-red-gray"
