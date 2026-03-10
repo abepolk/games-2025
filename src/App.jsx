@@ -13,7 +13,7 @@ import {
   AttackKind,
   initGame,
   updateState
-} from "./gameLogic.js";
+} from "@/gameLogic/gameLogic";
 
 const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, handleAction }) => (
   <div className="flex">

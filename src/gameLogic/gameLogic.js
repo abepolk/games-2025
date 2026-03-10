@@ -1,4 +1,4 @@
-import { selectRandomElement } from "./utils";
+import { selectRandomElement } from "@/utils/utils";
 
 const PLAYER_SHIELD_MAX = 150;
 const PLAYER_BASE_SHIELD_RECHARGE = 2;

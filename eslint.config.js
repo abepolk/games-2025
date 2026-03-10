@@ -47,5 +47,12 @@ export default defineConfig([
       ],
       "@stylistic/brace-style": ["error", "1tbs"]
     }
+  },
+  {
+    // TODO maybe add the ESLint config too, haven't thought about that
+    files: ["vite.config.js"],
+    env: {
+      node: true
+    }
   }
 ]);
