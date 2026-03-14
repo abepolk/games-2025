@@ -83,19 +83,21 @@ const enemyWeapons = [
   }
 ];
 
-const initGame = (state) => {
+const getInitialGameState = () => {
+  return {
   // A counter for enemies that lets us refer to them
-  state.enemyNum = 0;
-  state.player = {
-    shield: PLAYER_SHIELD_MAX,
-    defeated: false,
-    weaponKind: PlayerWeaponKind.SWORD,
-    powerSlashCooldownRemaining: 0
+    enemyNum: 0,
+    player: {
+      shield: PLAYER_SHIELD_MAX,
+      defeated: false,
+      weaponKind: PlayerWeaponKind.SWORD,
+      powerSlashCooldownRemaining: 0
+    },
+    enemies: [],
+    enemiesDefeated: 0,
+    battlesWon: 0,
+    attackKind: null
   };
-  state.enemies = [];
-  state.enemiesDefeated = 0;
-  state.battlesWon = 0;
-  state.attackKind = null;
 };
 
 const checkScene = (attemptedAction, currentScene, allowedScenes) => {
@@ -125,7 +127,12 @@ const checkValidAttackKind = (attackKind, currentScene) => {
   }
 };
 
-const updateState = ({ action, state, options }) => {
+const updateState = (reactState, action) => {
+  // TODO: This can be const once we sort out re-initializing the state, which I'm
+  // currently doing by creating a new object.
+  console.log(reactState);
+  let state = structuredClone(reactState);
+
   const rechargePlayerShield = (player, amount) => {
     player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
   };
@@ -222,7 +229,7 @@ const updateState = ({ action, state, options }) => {
     }
   };
 
-  const attack = (localState, localOptions) => {
+  const attack = (localState, localAction) => {
     const playerWeapon = playerWeapons.find((weapon) => {
       return weapon.kind === localState.player.weaponKind;
     });
@@ -244,7 +251,7 @@ const updateState = ({ action, state, options }) => {
       }
     }
     const damage = playerAttackKindDamage(playerAttackKindStats);
-    const attackedEnemyIndex = localOptions.attackedEnemyIndex;
+    const attackedEnemyIndex = localAction.attackedEnemyIndex;
     console.assert(attackedEnemyIndex !== undefined);
     const enemy = localState.enemies[attackedEnemyIndex];
     applyEnemyDamage(enemy, damage);
@@ -310,13 +317,18 @@ const updateState = ({ action, state, options }) => {
   checkValidControlFlow(state);
   checkValidAttackKind(state.attackKind, state.gameScene);
 
-  switch (action) {
+  switch (action.type) {
     case GameAction.RESTART: {
       checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
 
-      state.gameScene = GameScene.MENU_SCENE;
-      initGame(state);
+      // TODO: Better system for resetting state.
+      state = {
+        ...getInitialGameState(state),
+        gameScene: GameScene.MENU_SCENE,
+        messages: state.messages
+      };
       state.messages.push("Started a new game.");
+
       debugPrintStatus();
 
       break;
@@ -374,14 +386,14 @@ const updateState = ({ action, state, options }) => {
       checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK]);
 
       state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
-      state.attackKind = options.attackKind;
+      state.attackKind = action.attackKind;
 
       break;
     }
     case GameAction.SELECT_ENEMY: {
       checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
 
-      attack(state, options);
+      attack(state, action);
       state.attackKind = null;
 
       if (!state.player.defeated) {
@@ -394,7 +406,6 @@ const updateState = ({ action, state, options }) => {
       throw `Unknown Action ${action}`;
     }
   }
-
   return state;
 };
 
@@ -405,6 +416,6 @@ export {
   ENEMY_SHIELD_MAX,
   EnemyWeaponKind,
   AttackKind,
-  initGame,
+  getInitialGameState,
   updateState
 };

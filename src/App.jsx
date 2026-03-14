@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useReducer, useRef, useEffect } from "react";
 import daggerIcon from "./dagger.svg";
 import stickIcon from "./stick.svg";
 import spearIcon from "./spear.svg";
@@ -11,11 +11,11 @@ import {
   ENEMY_SHIELD_MAX,
   EnemyWeaponKind,
   AttackKind,
-  initGame,
+  getInitialGameState,
   updateState
 } from "@/gameLogic/gameLogic";
 
-const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, handleAction }) => (
+const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, dispatchAction }) => (
   <div className="flex">
     {attackable && (
       <button
@@ -30,7 +30,8 @@ const HealthBar = ({ attackable, current, max, label, color, index, weaponKind, 
           justify-center
         "
         onClick={() => {
-          handleAction(GameAction.SELECT_ENEMY, {
+          dispatchAction({
+            type: GameAction.SELECT_ENEMY,
             attackedEnemyIndex: index
           });
         }}
@@ -109,19 +110,12 @@ const RPGInterface = () => {
 
   const messagesBottom = useRef(null);
 
-  const [gameState, setGameState] = useState({
+  const [gameState, dispatchAction] = useReducer(updateState, {
+    ...getInitialGameState(),
     gameScene: GameScene.MENU_SCENE,
     messages: []
   });
   const [prevGameState, setPrevGameState] = useState(null);
-
-  useEffect(() => {
-    setGameState((prevState) => {
-      const localState = structuredClone(prevState);
-      initGame(localState);
-      return localState;
-    });
-  }, []);
 
   useEffect(() => {
     const messagesLengthSame = prevGameState && prevGameState.messages.length === gameState.messages.length;
@@ -131,21 +125,8 @@ const RPGInterface = () => {
     if (messagesHaveChanged) {
       messagesBottom.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [gameState, prevGameState]);
-
-  const handleAction = (action, options) => {
     setPrevGameState(gameState);
-    setGameState((prevState) => {
-      const state = structuredClone(prevState);
-      try {
-        return updateState({ action, state, options });
-      } catch (error) {
-        console.error(error);
-        state.messages.push(`Error: ${error}`);
-        return state;
-      }
-    });
-  };
+  }, [gameState]);
 
   let buttonOptions;
   if (gameState.gameScene === GameScene.BATTLE_BASE) {
@@ -161,7 +142,7 @@ const RPGInterface = () => {
           disabledClass="disabled:text-gray-400"
           enabled={gameState.gameScene === GameScene.BATTLE_BASE}
           actionCallback={() => {
-            handleAction(GameAction.ATTACK);
+            dispatchAction({ type: GameAction.ATTACK });
           }}
         />
         <ActionButton
@@ -172,7 +153,7 @@ const RPGInterface = () => {
           disabledClass="disabled:bg-white"
           enabled={true}
           actionCallback={() => {
-            handleAction(GameAction.SHIELD);
+            dispatchAction({ type: GameAction.SHIELD });
           }}
         />
       </>
@@ -192,7 +173,7 @@ const RPGInterface = () => {
             disabledClass="disabled:text-gray-400"
             enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK}
             actionCallback={() => {
-              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: AttackKind.SWORD_SLASH });
+              dispatchAction({ type: GameAction.SELECT_ATTACK_KIND, attackKind: AttackKind.SWORD_SLASH });
             }}
           />
           <ActionButton
@@ -204,7 +185,7 @@ const RPGInterface = () => {
             disabledClass="disabled:text-gray-400"
             enabled={gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK && gameState.player.powerSlashCooldownRemaining <= 0}
             actionCallback={() => {
-              handleAction(GameAction.SELECT_ATTACK_KIND, { attackKind: AttackKind.POWER_SLASH });
+              dispatchAction({ type: GameAction.SELECT_ATTACK_KIND, attackKind: AttackKind.POWER_SLASH });
             }}
           />
         </div>
@@ -216,7 +197,7 @@ const RPGInterface = () => {
           disabledClass="disabled:bg-white"
           enabled={true}
           actionCallback={() => {
-            handleAction(GameAction.CANCEL_ATTACK);
+            dispatchAction({ type: GameAction.CANCEL_ATTACK });
           }}
         />
       </>
@@ -236,7 +217,7 @@ const RPGInterface = () => {
               disabledClass="disabled:text-gray-400"
               enabled={true}
               actionCallback={() => {
-                handleAction(GameAction.BATTLE);
+                dispatchAction({ type: GameAction.BATTLE });
               }}
             />
           )}
@@ -249,7 +230,7 @@ const RPGInterface = () => {
           spanWholeWidth={gameState.player && gameState.player.defeated}
           enabled={true}
           actionCallback={() => {
-            handleAction(GameAction.RESTART);
+            dispatchAction({ type: GameAction.RESTART });
           }}
         />
       </>
@@ -377,7 +358,7 @@ const RPGInterface = () => {
                   max={PLAYER_SHIELD_MAX}
                   label="Player Health"
                   color="bg-green-500"
-                  handleAction={handleAction}
+                  dispatchAction={dispatchAction}
                 />
               </div>
               <div className="bg-gray-800 rounded-lg p-4 space-y-4">
@@ -390,7 +371,7 @@ const RPGInterface = () => {
                     max={ENEMY_SHIELD_MAX}
                     label={`Enemy ${enemy.enemyNum} Health`}
                     color="bg-red-800"
-                    handleAction={handleAction}
+                    dispatchAction={dispatchAction}
                     weaponKind={enemy.weapon.kind}
                   />
                 ))}
