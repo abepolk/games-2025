@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import daggerIcon from "./dagger.svg";
-import stickIcon from "./stick.svg";
-import spearIcon from "./spear.svg";
-import "./App.css";
+import daggerIcon from "@/assets/dagger.svg";
+import stickIcon from "@/assets/stick.svg";
+import spearIcon from "@/assets/spear.svg";
+import "@/App.css";
 
 import {
   GameScene,
