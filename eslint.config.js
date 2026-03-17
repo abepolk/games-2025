@@ -51,8 +51,8 @@ export default defineConfig([
   {
     // TODO maybe add the ESLint config too, haven't thought about that
     files: ["vite.config.js"],
-    env: {
-      node: true
+    languageOptions: {
+      globals: globals.node
     }
   }
 ]);
