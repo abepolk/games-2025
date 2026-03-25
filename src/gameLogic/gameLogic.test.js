@@ -43,7 +43,7 @@ describe("createEnemy", () => {
   });
 
   // Simplified from Sonnet 4.6 Thinking version
-  describe("weapon stats at level 0", () => {
+  describe("should initialize weapon with correct kind", () => {
     it.each([
       EnemyWeaponKind.DAGGER,
       EnemyWeaponKind.STICK,
