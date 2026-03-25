@@ -410,5 +410,6 @@ export {
   EnemyWeaponKind,
   AttackKind,
   initGame,
-  updateState
+  updateState,
+  createEnemy
 };
