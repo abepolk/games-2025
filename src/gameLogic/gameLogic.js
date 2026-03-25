@@ -104,13 +104,13 @@ const checkScene = (attemptedAction, currentScene, allowedScenes) => {
   }
 };
 
-const checkValidControlFlow = (localState) => {
-  if (!Object.values(AttackKind).includes(localState.attackKind)
-    && localState.attackKind !== null) {
-    throw `Invalid attackKind: ${localState.attackKind}`;
+const checkValidControlFlow = (state) => {
+  if (!Object.values(AttackKind).includes(state.attackKind)
+    && state.attackKind !== null) {
+    throw `Invalid attackKind: ${state.attackKind}`;
   }
-  if (!Object.values(GameScene).includes(localState.gameScene)) {
-    throw `Invalid gameScene: ${localState.gameScene}`;
+  if (!Object.values(GameScene).includes(state.gameScene)) {
+    throw `Invalid gameScene: ${state.gameScene}`;
   }
   // We already check implicitly for the GameAction with switch case default
 };
@@ -125,190 +125,194 @@ const checkValidAttackKind = (attackKind, currentScene) => {
   }
 };
 
-const updateState = ({ action, state, options }) => {
-  const rechargePlayerShield = (player, amount) => {
-    player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
-  };
+const rechargePlayerShield = (player, amount) => {
+  player.shield = Math.min(PLAYER_SHIELD_MAX, player.shield + amount);
+};
 
-  const debugPrintStatus = () => {
-    const result = [`Player Shield: ${state.player.shield}/${PLAYER_SHIELD_MAX}`];
-    if (state.enemies.length === 0) {
-      console.log("No enemies present");
+const debugPrintStatus = (state) => {
+  const result = [`Player Shield: ${state.player.shield}/${PLAYER_SHIELD_MAX}`];
+  if (state.enemies.length === 0) {
+    console.log("No enemies present");
+    return;
+  }
+  state.enemies.forEach((enemy, index) => {
+    if (enemy === null) {
+      console.error(`Enemy ${index} is null`);
+      result.push(`Enemy ${index} is null`);
+    } else if (enemy.defeated) {
+      result.push(`Enemy ${index} has been defeated`);
+    } else {
+      result.push(`Enemy ${index} Shield: ${enemy.shield}/${ENEMY_SHIELD_MAX}`);
+    }
+  });
+  console.log(result.join("\n"));
+};
+
+const createWeapon = (level, kind) => {
+  // Need to make spear damage value not get multiplied by zero
+  // TODO level needs to be conceptually separated from battles won
+  const baseDamage = (level + 1) * enemyWeapons.find(weapon => weapon.kind === kind).strength;
+  const bonusDamageMin = 1 + Math.floor(level / 10);
+  const bonusDamageMax = 2 + Math.floor(level / 5);
+  const name = enemyWeapons.find(weapon => weapon.kind === kind).name;
+  const namePlural = enemyWeapons.find(weapon => weapon.kind === kind).namePlural;
+  return {
+    kind,
+    baseDamage,
+    bonusDamageMin,
+    bonusDamageMax,
+    name,
+    namePlural
+  };
+};
+
+const createEnemy = (incrementAndGetEnemyNum, level, kind) => {
+  return {
+    enemyNum: incrementAndGetEnemyNum(),
+    level,
+    weapon: createWeapon(level, kind),
+    shield: ENEMY_SHIELD_MAX,
+    defeated: false
+  };
+};
+
+const applyEnemyDamage = (enemy, amount) => {
+  if (amount >= enemy.shield) {
+    enemy.defeated = true;
+    enemy.shield = 0;
+  } else {
+    enemy.shield = enemy.shield - amount;
+    console.assert(enemy.shield > 0);
+  }
+};
+
+const enemyAttack = (state) => {
+  for (const enemy of state.enemies) {
+    const enemyDamage = enemyWeaponAttackDamage(enemy.weapon);
+    applyPlayerDamage(state.player, enemyDamage);
+    state.messages.push(`Enemy ${enemy.enemyNum} attacks with its ${enemy.weapon.name} for ${enemyDamage} damage!`);
+    debugPrintStatus(state);
+    if (state.player.defeated) {
+      state.messages.push(`Player defeated after winning ${state.enemiesDefeated} battles! Game Over.`);
+      state.messages.push("Click Restart to start a new game.");
+      state.gameScene = GameScene.MENU_SCENE;
       return;
     }
-    state.enemies.forEach((enemy, index) => {
-      if (enemy === null) {
-        console.error(`Enemy ${index} is null`);
-        result.push(`Enemy ${index} is null`);
-      } else if (enemy.defeated) {
-        result.push(`Enemy ${index} has been defeated`);
+  };
+};
+
+const enemyWeaponAttackDamage = (weapon) => {
+  return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
+};
+
+const playerAttackKindDamage = (attackKindStats) => {
+  return attackKindStats.baseDamage + Math.floor(Math.random() * attackKindStats.bonusDamageMax) + attackKindStats.bonusDamageMin;
+};
+
+const applyPlayerDamage = (player, amount) => {
+  if (amount >= player.shield) {
+    player.defeated = true;
+    player.shield = 0;
+  } else {
+    const newShieldAmount = player.shield - amount;
+    player.shield = newShieldAmount;
+    console.assert(player.shield > 0);
+  }
+};
+
+const attack = (state, options) => {
+  const playerWeapon = playerWeapons.find((weapon) => {
+    return weapon.kind === state.player.weaponKind;
+  });
+  if (playerWeapon === undefined) {
+    throw "weaponKind not found for the player weapon";
+  }
+  const playerAttackKindStats = playerWeapon.attackKinds.find(
+    (attack) => {
+      return attack.attackKind === state.attackKind;
+    });
+  if (playerAttackKindStats === undefined) {
+    throw "attackKind not found for the player weapon";
+  }
+  if (state.attackKind === AttackKind.POWER_SLASH) {
+    if (state.player.powerSlashCooldownRemaining <= 0) {
+      state.player.powerSlashCooldownRemaining = playerAttackKindStats.cooldownNeeded;
+    } else {
+      throw "attempted to do power attack while cooldown was above 0";
+    }
+  }
+  const damage = playerAttackKindDamage(playerAttackKindStats);
+  const attackedEnemyIndex = options.attackedEnemyIndex;
+  console.assert(attackedEnemyIndex !== undefined);
+  const enemy = state.enemies[attackedEnemyIndex];
+  applyEnemyDamage(enemy, damage);
+  state.messages.push(`Player attacks for ${damage} damage!`);
+  if (enemy.defeated) {
+    debugPrintStatus(state);
+    state.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
+    state.enemiesDefeated = state.enemiesDefeated + 1;
+    state.enemies.splice(attackedEnemyIndex, 1);
+    if (state.enemies.length > 0) {
+      // TODO: Store just the EnemyWeaponKind in the enemy object
+      // and reference a static list of enemy weapons, to parallel
+      // how we handle player weapons
+      let compatibleWeapon;
+      if (enemy.weapon.kind === EnemyWeaponKind.DAGGER) {
+        compatibleWeapon = EnemyWeaponKind.STICK;
+      } else if (enemy.weapon.kind === EnemyWeaponKind.STICK) {
+        compatibleWeapon = EnemyWeaponKind.DAGGER;
+      } else if (enemy.weapon.kind === EnemyWeaponKind.SPEAR) {
+        compatibleWeapon = null;
       } else {
-        result.push(`Enemy ${index} Shield: ${enemy.shield}/${ENEMY_SHIELD_MAX}`);
+        throw "Weapon kind not found when looking for a compatible weapon";
       }
-    });
-    console.log(result.join("\n"));
-  };
-
-  const createWeapon = (level, kind) => {
-    // Need to make spear damage value not get multiplied by zero
-    // TODO level needs to be conceptually separated from battles won
-    const baseDamage = (level + 1) * enemyWeapons.find(weapon => weapon.kind === kind).strength;
-    const bonusDamageMin = 1 + Math.floor(level / 10);
-    const bonusDamageMax = 2 + Math.floor(level / 5);
-    const name = enemyWeapons.find(weapon => weapon.kind === kind).name;
-    const namePlural = enemyWeapons.find(weapon => weapon.kind === kind).namePlural;
-    return {
-      kind,
-      baseDamage,
-      bonusDamageMin,
-      bonusDamageMax,
-      name,
-      namePlural
-    };
-  };
-
-  const createEnemy = (level, kind) => {
-    state.enemyNum++;
-    return {
-      enemyNum: state.enemyNum,
-      level,
-      weapon: createWeapon(level, kind),
-      shield: ENEMY_SHIELD_MAX,
-      defeated: false
-    };
-  };
-
-  const applyEnemyDamage = (enemy, amount) => {
-    if (amount >= enemy.shield) {
-      enemy.defeated = true;
-      enemy.shield = 0;
-    } else {
-      enemy.shield = enemy.shield - amount;
-      console.assert(enemy.shield > 0);
-    }
-  };
-
-  const enemyAttack = (localState) => {
-    for (const enemy of localState.enemies) {
-      const enemyDamage = enemyWeaponAttackDamage(enemy.weapon);
-      applyPlayerDamage(localState.player, enemyDamage);
-      localState.messages.push(`Enemy ${enemy.enemyNum} attacks with its ${enemy.weapon.name} for ${enemyDamage} damage!`);
-      debugPrintStatus();
-      if (localState.player.defeated) {
-        localState.messages.push(`Player defeated after winning ${localState.enemiesDefeated} battles! Game Over.`);
-        localState.messages.push("Click Restart to start a new game.");
-        localState.gameScene = GameScene.MENU_SCENE;
-        return;
-      }
-    };
-  };
-
-  const enemyWeaponAttackDamage = (weapon) => {
-    return weapon.baseDamage + Math.floor(Math.random() * weapon.bonusDamageMax) + weapon.bonusDamageMin;
-  };
-
-  const playerAttackKindDamage = (attackKindStats) => {
-    return attackKindStats.baseDamage + Math.floor(Math.random() * attackKindStats.bonusDamageMax) + attackKindStats.bonusDamageMin;
-  };
-
-  const applyPlayerDamage = (player, amount) => {
-    if (amount >= player.shield) {
-      player.defeated = true;
-      player.shield = 0;
-    } else {
-      const newShieldAmount = player.shield - amount;
-      player.shield = newShieldAmount;
-      console.assert(player.shield > 0);
-    }
-  };
-
-  const attack = (localState, localOptions) => {
-    const playerWeapon = playerWeapons.find((weapon) => {
-      return weapon.kind === localState.player.weaponKind;
-    });
-    if (playerWeapon === undefined) {
-      throw "weaponKind not found for the player weapon";
-    }
-    const playerAttackKindStats = playerWeapon.attackKinds.find(
-      (attack) => {
-        return attack.attackKind === localState.attackKind;
+      const enemiesCanTransfer = state.enemies.filter((enemy) => {
+        return enemy.weapon.kind === compatibleWeapon;
       });
-    if (playerAttackKindStats === undefined) {
-      throw "attackKind not found for the player weapon";
-    }
-    if (localState.attackKind === AttackKind.POWER_SLASH) {
-      if (localState.player.powerSlashCooldownRemaining <= 0) {
-        localState.player.powerSlashCooldownRemaining = playerAttackKindStats.cooldownNeeded;
-      } else {
-        throw "attempted to do power attack while cooldown was above 0";
+      if (enemiesCanTransfer.length > 0) {
+        const weaponRecipient = selectRandomElement(enemiesCanTransfer);
+        const oldWeapon = weaponRecipient.weapon;
+        weaponRecipient.weapon = createWeapon(weaponRecipient.level, EnemyWeaponKind.SPEAR);
+        state.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
       }
     }
-    const damage = playerAttackKindDamage(playerAttackKindStats);
-    const attackedEnemyIndex = localOptions.attackedEnemyIndex;
-    console.assert(attackedEnemyIndex !== undefined);
-    const enemy = localState.enemies[attackedEnemyIndex];
-    applyEnemyDamage(enemy, damage);
-    localState.messages.push(`Player attacks for ${damage} damage!`);
-    if (enemy.defeated) {
-      debugPrintStatus();
-      localState.messages.push(`Enemy ${enemy.enemyNum} defeated!`);
-      localState.enemiesDefeated = localState.enemiesDefeated + 1;
-      localState.enemies.splice(attackedEnemyIndex, 1);
-      if (localState.enemies.length > 0) {
-        // TODO: Store just the EnemyWeaponKind in the enemy object
-        // and reference a static list of enemy weapons, to parallel
-        // how we handle player weapons
-        let compatibleWeapon;
-        if (enemy.weapon.kind === EnemyWeaponKind.DAGGER) {
-          compatibleWeapon = EnemyWeaponKind.STICK;
-        } else if (enemy.weapon.kind === EnemyWeaponKind.STICK) {
-          compatibleWeapon = EnemyWeaponKind.DAGGER;
-        } else if (enemy.weapon.kind === EnemyWeaponKind.SPEAR) {
-          compatibleWeapon = null;
-        } else {
-          throw "Weapon kind not found when looking for a compatible weapon";
-        }
-        const enemiesCanTransfer = localState.enemies.filter((enemy) => {
-          return enemy.weapon.kind === compatibleWeapon;
-        });
-        if (enemiesCanTransfer.length > 0) {
-          const weaponRecipient = selectRandomElement(enemiesCanTransfer);
-          const oldWeapon = weaponRecipient.weapon;
-          weaponRecipient.weapon = createWeapon(weaponRecipient.level, EnemyWeaponKind.SPEAR);
-          localState.messages.push(`Enemy ${weaponRecipient.enemyNum} picked up enemy ${enemy.enemyNum}'s ${enemy.weapon.name} and used it with its ${oldWeapon.name} to build a powerful spear!`);
-        }
-      }
+  }
+  if (state.enemies.length === 0) {
+    const rechargeBonus = 5 + Math.floor(enemy.level / 5);
+    rechargePlayerShield(state.player, rechargeBonus);
+    state.messages.push(
+      `Player healed by ${rechargeBonus}.`
+    );
+    state.battlesWon++;
+    state.gameScene = GameScene.MENU_SCENE;
+  } else {
+    enemyAttack(state);
+    if (!state.player.defeated) {
+      state.gameScene = GameScene.BATTLE_BASE;
     }
-    if (localState.enemies.length === 0) {
-      const rechargeBonus = 5 + Math.floor(enemy.level / 5);
-      rechargePlayerShield(localState.player, rechargeBonus);
-      localState.messages.push(
-        `Player healed by ${rechargeBonus}.`
-      );
-      localState.battlesWon++;
-      localState.gameScene = GameScene.MENU_SCENE;
-    } else {
-      enemyAttack(localState);
-      if (!localState.player.defeated) {
-        localState.gameScene = GameScene.BATTLE_BASE;
-      }
-    }
-  };
+  }
+};
 
-  const prepareNextTurn = (localState) => {
-    if (localState.player.powerSlashCooldownRemaining > 0) {
-      localState.player.powerSlashCooldownRemaining--;
-    }
-    rechargePlayerShield(localState.player, PLAYER_BASE_SHIELD_RECHARGE);
-    localState.messages.push(`Player heals by ${PLAYER_BASE_SHIELD_RECHARGE}.`);
-    debugPrintStatus();
-  };
+const prepareNextTurn = (state) => {
+  if (state.player.powerSlashCooldownRemaining > 0) {
+    state.player.powerSlashCooldownRemaining--;
+  }
+  rechargePlayerShield(state.player, PLAYER_BASE_SHIELD_RECHARGE);
+  state.messages.push(`Player heals by ${PLAYER_BASE_SHIELD_RECHARGE}.`);
+  debugPrintStatus(state);
+};
 
+const updateState = ({ action, state, options }) => {
   console.log(state.gameScene);
   console.log(action);
 
   checkValidControlFlow(state);
   checkValidAttackKind(state.attackKind, state.gameScene);
+
+  const incrementAndGetEnemyNum = () => {
+    state.enemyNum++;
+    return state.enemyNum;
+  };
 
   switch (action) {
     case GameAction.RESTART: {
@@ -317,7 +321,7 @@ const updateState = ({ action, state, options }) => {
       state.gameScene = GameScene.MENU_SCENE;
       initGame(state);
       state.messages.push("Started a new game.");
-      debugPrintStatus();
+      debugPrintStatus(state);
 
       break;
     }
@@ -334,10 +338,10 @@ const updateState = ({ action, state, options }) => {
           undefined
         ].map((_) => {
           const weapon = selectRandomElement(initialWeapons);
-          return createEnemy(state.battlesWon, weapon);
+          return createEnemy(incrementAndGetEnemyNum, state.battlesWon, weapon);
         });
         state.gameScene = GameScene.BATTLE_BASE;
-        debugPrintStatus();
+        debugPrintStatus(state);
       }
 
       break;
