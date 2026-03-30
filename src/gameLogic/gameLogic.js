@@ -411,5 +411,6 @@ export {
   AttackKind,
   initGame,
   updateState,
-  createEnemy
+  createEnemy,
+  enemyAttack
 };
