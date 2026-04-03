@@ -39,7 +39,8 @@ describe("createEnemy", () => {
   it("should call incrementAndGetEnemyNum exactly once", () => {
     let callCount = 0;
     const counter = () => {
-      callCount++; return callCount;
+      callCount++;
+      return callCount;
     };
     createEnemy(counter, 0, EnemyWeaponKind.DAGGER);
     expect(callCount).toBe(1);
