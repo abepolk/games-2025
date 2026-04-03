@@ -83,19 +83,21 @@ const enemyWeapons = [
   }
 ];
 
-const initGame = (state) => {
+const getInitialGameState = () => {
+  return {
   // A counter for enemies that lets us refer to them
-  state.enemyNum = 0;
-  state.player = {
-    shield: PLAYER_SHIELD_MAX,
-    defeated: false,
-    weaponKind: PlayerWeaponKind.SWORD,
-    powerSlashCooldownRemaining: 0
+    enemyNum: 0,
+    player: {
+      shield: PLAYER_SHIELD_MAX,
+      defeated: false,
+      weaponKind: PlayerWeaponKind.SWORD,
+      powerSlashCooldownRemaining: 0
+    },
+    enemies: [],
+    enemiesDefeated: 0,
+    battlesWon: 0,
+    attackKind: null
   };
-  state.enemies = [];
-  state.enemiesDefeated = 0;
-  state.battlesWon = 0;
-  state.attackKind = null;
 };
 
 const checkScene = (attemptedAction, currentScene, allowedScenes) => {
@@ -220,7 +222,7 @@ const applyPlayerDamage = (player, amount) => {
   }
 };
 
-const attack = (state, options) => {
+const attack = (state, action) => {
   const playerWeapon = playerWeapons.find((weapon) => {
     return weapon.kind === state.player.weaponKind;
   });
@@ -242,7 +244,7 @@ const attack = (state, options) => {
     }
   }
   const damage = playerAttackKindDamage(playerAttackKindStats);
-  const attackedEnemyIndex = options.attackedEnemyIndex;
+  const attackedEnemyIndex = action.attackedEnemyIndex;
   console.assert(attackedEnemyIndex !== undefined);
   const enemy = state.enemies[attackedEnemyIndex];
   applyEnemyDamage(enemy, damage);
@@ -302,9 +304,12 @@ const prepareNextTurn = (state) => {
   debugPrintStatus(state);
 };
 
-const updateState = ({ action, state, options }) => {
-  console.log(state.gameScene);
+const updateState = (reactState, action) => {
+  // TODO: This can be const once we sort out re-initializing the state, which I'm
+  // currently doing by creating a new object.
+  console.log(reactState.gameScene);
   console.log(action);
+  let state = structuredClone(reactState);
 
   try {
     checkValidControlFlow(state);
@@ -315,12 +320,18 @@ const updateState = ({ action, state, options }) => {
       return state.enemyNum;
     };
 
-    switch (action) {
+    switch (action.type) {
       case GameAction.RESTART: {
         checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
 
         state.gameScene = GameScene.MENU_SCENE;
-        initGame(state);
+
+        // TODO: Better system for resetting state.
+        state = {
+          ...getInitialGameState(),
+          gameScene: GameScene.MENU_SCENE,
+          messages: state.messages
+        };
         state.messages.push("Started a new game.");
         debugPrintStatus(state);
 
@@ -379,14 +390,14 @@ const updateState = ({ action, state, options }) => {
         checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK]);
 
         state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
-        state.attackKind = options.attackKind;
+        state.attackKind = action.attackKind;
 
         break;
       }
       case GameAction.SELECT_ENEMY: {
         checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
 
-        attack(state, options);
+        attack(state, action);
         state.attackKind = null;
 
         if (!state.player.defeated) {
@@ -396,7 +407,7 @@ const updateState = ({ action, state, options }) => {
         break;
       }
       default: {
-        throw `Unknown Action ${action}`;
+        throw `Unknown Action type ${action}`;
       }
     }
   } catch (error) {
@@ -416,7 +427,7 @@ export {
   ENEMY_SHIELD_MAX,
   EnemyWeaponKind,
   AttackKind,
-  initGame,
+  getInitialGameState,
   updateState,
   createEnemy,
   enemyAttack
