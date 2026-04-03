@@ -137,13 +137,7 @@ const RPGInterface = () => {
     setPrevGameState(gameState);
     setGameState((prevState) => {
       const state = structuredClone(prevState);
-      try {
-        return updateState({ action, state, options });
-      } catch (error) {
-        console.error(error);
-        state.messages.push(`Error: ${error}`);
-        return state;
-      }
+      return updateState({ action, state, options });
     });
   };
 

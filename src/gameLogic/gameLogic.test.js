@@ -38,7 +38,9 @@ describe("createEnemy", () => {
 
   it("should call incrementAndGetEnemyNum exactly once", () => {
     let callCount = 0;
-    const counter = () => { callCount++; return callCount; };
+    const counter = () => {
+      callCount++; return callCount;
+    };
     createEnemy(counter, 0, EnemyWeaponKind.DAGGER);
     expect(callCount).toBe(1);
   });
@@ -48,7 +50,7 @@ describe("createEnemy", () => {
     it.each([
       EnemyWeaponKind.DAGGER,
       EnemyWeaponKind.STICK,
-      EnemyWeaponKind.SPEAR,
+      EnemyWeaponKind.SPEAR
     ])("kind: $kind", (kind) => {
       const enemy = createEnemy(makeCounter(), 0, kind);
       expect(enemy.weapon.kind).toBe(kind);
@@ -110,7 +112,7 @@ describe("enemyAttack", () => {
       ]
     });
     enemyAttack(state);
-    const hasEnemy2Message = state.messages.some((m) => m.includes("Enemy 2 attacks"));
+    const hasEnemy2Message = state.messages.some(m => m.includes("Enemy 2 attacks"));
     expect(hasEnemy2Message).toBe(false);
   });
 
@@ -264,10 +266,18 @@ describe("State Transitions and Scene Flow", () => {
     invalidSceneTransitions.forEach(({ from, action, options }) => {
       it(`should throw error when ${action} action called from ${from}`, () => {
         state.gameScene = from;
+        // store the initial state
+        const { messages: messagesBefore, ...restBefore } = structuredClone(state);
 
-        expect(() => {
-          updateState({ action, state, options });
-        }).toThrow(/not allowed from Scene/);
+        // run the update
+        const newState = updateState({ action, state, options });
+
+        // destructure the updated state
+        const { messages: messagesAfter, ...restAfter } = newState;
+
+        expect(messagesAfter.length - messagesBefore.length).toBe(1);
+        expect(messagesAfter[messagesAfter.length - 1]).toContain("not allowed from Scene");
+        expect(restBefore).toEqual(restAfter);
       });
     });
   });
@@ -292,15 +302,23 @@ describe("State Transitions and Scene Flow", () => {
     });
 
     // Repeat above check but set state.attackKind to a non-null value and
-    // check that an error is thrown.
+    // check that an error is recorded.
     scenesWithNullAttackKind.forEach(({ scene, action, options }) => {
       it(`should throw error if attackKind is not null in ${scene}`, () => {
         state.gameScene = scene;
         state.attackKind = AttackKind.SWORD_SLASH;
 
-        expect(() => {
-          updateState({ action, state, options });
-        }).toThrow(/attackKind is not null/);
+        // store the initial state
+        const { messages: messagesBefore, ...restBefore } = structuredClone(state);
+
+        const newState = updateState({ action, state, options });
+
+        // destructure the updated state
+        const { messages: messagesAfter, ...restAfter } = newState;
+
+        expect(messagesAfter.length - messagesBefore.length).toBe(1);
+        expect(messagesAfter[messagesAfter.length - 1]).toContain("attackKind is not null");
+        expect(restBefore).toEqual(restAfter);
       });
     });
   });
@@ -311,9 +329,17 @@ describe("State Transitions and Scene Flow", () => {
       state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
       state.attackKind = null;
 
-      expect(() => {
-        updateState({ action: GameAction.SELECT_ENEMY, state, options: { attackedEnemyIndex: 0 } });
-      }).toThrow(/attackKind is null/);
+      // store the initial state
+      const { messages: messagesBefore, ...restBefore } = structuredClone(state);
+
+      const newState = updateState({ action: GameAction.SELECT_ENEMY, state, options: { attackedEnemyIndex: 0 } });
+
+      // destructure the updated state
+      const { messages: messagesAfter, ...restAfter } = newState;
+
+      expect(messagesAfter.length - messagesBefore.length).toBe(1);
+      expect(messagesAfter[messagesAfter.length - 1]).toContain("attackKind is null");
+      expect(restBefore).toEqual(restAfter);
     });
 
     it("should have valid attackKind in BATTLE_SELECT_ENEMY after selection", () => {

@@ -306,97 +306,104 @@ const updateState = ({ action, state, options }) => {
   console.log(state.gameScene);
   console.log(action);
 
-  checkValidControlFlow(state);
-  checkValidAttackKind(state.attackKind, state.gameScene);
+  try {
+    checkValidControlFlow(state);
+    checkValidAttackKind(state.attackKind, state.gameScene);
 
-  const incrementAndGetEnemyNum = () => {
-    state.enemyNum++;
-    return state.enemyNum;
-  };
+    const incrementAndGetEnemyNum = () => {
+      state.enemyNum++;
+      return state.enemyNum;
+    };
 
-  switch (action) {
-    case GameAction.RESTART: {
-      checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
+    switch (action) {
+      case GameAction.RESTART: {
+        checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
 
-      state.gameScene = GameScene.MENU_SCENE;
-      initGame(state);
-      state.messages.push("Started a new game.");
-      debugPrintStatus(state);
-
-      break;
-    }
-    case GameAction.BATTLE: {
-      checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
-
-      if (state.player.defeated) {
-        state.messages.push("Player was defeated. Click Restart to start a new game.");
-      } else {
-        const initialWeapons = [EnemyWeaponKind.DAGGER, EnemyWeaponKind.STICK];
-        state.enemies = [
-          undefined,
-          undefined,
-          undefined
-        ].map((_) => {
-          const weapon = selectRandomElement(initialWeapons);
-          return createEnemy(incrementAndGetEnemyNum, state.battlesWon, weapon);
-        });
-        state.gameScene = GameScene.BATTLE_BASE;
+        state.gameScene = GameScene.MENU_SCENE;
+        initGame(state);
+        state.messages.push("Started a new game.");
         debugPrintStatus(state);
+
+        break;
       }
+      case GameAction.BATTLE: {
+        checkScene(action, state.gameScene, [GameScene.MENU_SCENE]);
 
-      break;
-    }
-    case GameAction.ATTACK: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
+        if (state.player.defeated) {
+          state.messages.push("Player was defeated. Click Restart to start a new game.");
+        } else {
+          const initialWeapons = [EnemyWeaponKind.DAGGER, EnemyWeaponKind.STICK];
+          state.enemies = [
+            undefined,
+            undefined,
+            undefined
+          ].map((_) => {
+            const weapon = selectRandomElement(initialWeapons);
+            return createEnemy(incrementAndGetEnemyNum, state.battlesWon, weapon);
+          });
+          state.gameScene = GameScene.BATTLE_BASE;
+          debugPrintStatus(state);
+        }
 
-      state.gameScene = GameScene.BATTLE_SELECT_ATTACK;
-
-      break;
-    }
-    case GameAction.SHIELD: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
-
-      const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
-      rechargePlayerShield(state.player, recharge);
-      state.messages.push(`Focusing energy restored ${recharge} health.`);
-      enemyAttack(state);
-      if (!state.player.defeated) {
-        prepareNextTurn(state);
+        break;
       }
+      case GameAction.ATTACK: {
+        checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
 
-      break;
-    }
-    case GameAction.CANCEL_ATTACK: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK, GameScene.BATTLE_SELECT_ENEMY]);
+        state.gameScene = GameScene.BATTLE_SELECT_ATTACK;
 
-      state.attackKind = null;
-      state.gameScene = GameScene.BATTLE_BASE;
-
-      break;
-    }
-    case GameAction.SELECT_ATTACK_KIND: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK]);
-
-      state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
-      state.attackKind = options.attackKind;
-
-      break;
-    }
-    case GameAction.SELECT_ENEMY: {
-      checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
-
-      attack(state, options);
-      state.attackKind = null;
-
-      if (!state.player.defeated) {
-        prepareNextTurn(state);
+        break;
       }
+      case GameAction.SHIELD: {
+        checkScene(action, state.gameScene, [GameScene.BATTLE_BASE]);
 
-      break;
+        const recharge = PLAYER_BASE_SHIELD_RECHARGE * 3;
+        rechargePlayerShield(state.player, recharge);
+        state.messages.push(`Focusing energy restored ${recharge} health.`);
+        enemyAttack(state);
+        if (!state.player.defeated) {
+          prepareNextTurn(state);
+        }
+
+        break;
+      }
+      case GameAction.CANCEL_ATTACK: {
+        checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK, GameScene.BATTLE_SELECT_ENEMY]);
+
+        state.attackKind = null;
+        state.gameScene = GameScene.BATTLE_BASE;
+
+        break;
+      }
+      case GameAction.SELECT_ATTACK_KIND: {
+        checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ATTACK]);
+
+        state.gameScene = GameScene.BATTLE_SELECT_ENEMY;
+        state.attackKind = options.attackKind;
+
+        break;
+      }
+      case GameAction.SELECT_ENEMY: {
+        checkScene(action, state.gameScene, [GameScene.BATTLE_SELECT_ENEMY]);
+
+        attack(state, options);
+        state.attackKind = null;
+
+        if (!state.player.defeated) {
+          prepareNextTurn(state);
+        }
+
+        break;
+      }
+      default: {
+        throw `Unknown Action ${action}`;
+      }
     }
-    default: {
-      throw `Unknown Action ${action}`;
-    }
+  } catch (error) {
+    console.error(error);
+    const originalState = structuredClone(state);
+    originalState.messages.push(`Error ${error}`);
+    return originalState;
   }
 
   return state;
