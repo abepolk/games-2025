@@ -412,7 +412,7 @@ const updateState = (reactState, action) => {
     }
   } catch (error) {
     console.error(error);
-    const originalState = structuredClone(state);
+    const originalState = structuredClone(reactState);
     originalState.messages.push(`Error ${error}`);
     return originalState;
   }

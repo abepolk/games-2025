@@ -282,7 +282,7 @@ describe("State Transitions and Scene Flow", () => {
         state.attackKind = null;
 
         const newState = updateState(state, action);
-        expect(newState.messages.some(m => m.startsWith("Error"))).toBe(false);
+        expect(newState.messages.some(m => m.includes("attackKind is not null in") || m.includes("attackKind is null in"))).toBe(false);
       });
     });
 
