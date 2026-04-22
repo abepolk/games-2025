@@ -3,11 +3,6 @@ import "@/App.css";
 
 import {
   GameScene,
-  GameAction,
-  PLAYER_SHIELD_MAX,
-  ENEMY_SHIELD_MAX,
-  EnemyWeaponKind,
-  AttackKind,
   getInitialGameState,
   updateState
 } from "@/gameLogic/gameLogic";

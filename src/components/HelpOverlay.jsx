@@ -1,6 +1,6 @@
 const HelpOverlay = ({ setHelpHovered, setHelpClicked, helpHovered, helpClicked }) => (
   <>
-    <div
+    <button
       className="
         items-center
         fixed
@@ -15,13 +15,14 @@ const HelpOverlay = ({ setHelpHovered, setHelpClicked, helpHovered, helpClicked 
         text-gray-100
         bg-[#2e406b]
         hover:bg-[#2e4680]
+        cursor-pointer
       "
       onMouseEnter={() => setHelpHovered(true)}
       onMouseLeave={() => setHelpHovered(false)}
       onClick={() => setHelpClicked(clicked => !clicked)}
     >
       ?
-    </div>
+    </button>
 
     <div
       className={`
@@ -45,6 +46,7 @@ const HelpOverlay = ({ setHelpHovered, setHelpClicked, helpHovered, helpClicked 
         transition-discrete
         starting:opacity-0
         duration-1000
+        z-50
       `}
     >
       <div className="mb-4">
