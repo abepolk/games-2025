@@ -11,10 +11,10 @@
     potential first message. Although it doesn't seem to do anything
     right now.
 */
-const GameConsole = ({ messages, messagesBottomRef }) => (
+const GameConsole = ({ messages, messagesBottomRef, localStorageAvailable }) => (
   <div className="bg-gray-800 flex flex-col grow overflow-hidden min-h-[2_*_2_*_var(--spacing)_+_var(--text-sm)_+_2_*_4_var(--spacing)_+_var(--text-sm))] rounded-lg border border-gray-700 mb-8">
     <div className="bg-gray-700 px-4 py-2 border-b border-gray-600">
-      <h2 className="text-sm font-medium text-gray-300">Game Console</h2>
+      <h2 className="text-sm font-medium text-gray-300">Game Console{localStorageAvailable ? "": " (Enable browser storage to save)"}</h2>
     </div>
     <div className="p-4 overflow-y-scroll">
       {messages && messages.map((message, index) => (

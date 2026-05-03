@@ -10,6 +10,7 @@ import GameConsole from "./components/GameConsole";
 import GameControls from "./components/GameControls";
 import HelpOverlay from "./components/HelpOverlay";
 import StatusBars from "./components/StatusBars";
+import { isLocalStorageAvailable } from "./utils/utils";
 
 const RPGInterface = () => {
   const [helpHovered, setHelpHovered] = useState(false);
@@ -17,10 +18,22 @@ const RPGInterface = () => {
 
   const messagesBottom = useRef(null);
 
-  const [gameState, dispatchAction] = useReducer(updateState, {
-    ...getInitialGameState(),
-    gameScene: GameScene.MENU_SCENE,
-    messages: []
+  const [localStorageAvailable] = useState(isLocalStorageAvailable);
+
+  const [gameState, dispatchAction] = useReducer(updateState, null, () => {
+    try {
+      const saved = localStorage.getItem("gameState");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Failed to load game state from localStorage", e);
+    }
+    return {
+      ...getInitialGameState(),
+      gameScene: GameScene.MENU_SCENE,
+      messages: []
+    };
   });
   const [prevGameState, setPrevGameState] = useState(null);
 
@@ -36,7 +49,14 @@ const RPGInterface = () => {
     setPrevGameState(gameState);
   }, [gameState]);
 
-  console.log(gameState.gameScene);
+  useEffect(() => {
+    try {
+      localStorage.setItem("gameState", JSON.stringify(gameState));
+    } catch (e) {
+      console.error("Failed to save game state to localStorage", e);
+    }
+  }, [gameState]);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       {/* the 12 has to be 2x the 6 in p-6 */}
@@ -51,7 +71,11 @@ const RPGInterface = () => {
           setHelpClicked={setHelpClicked}
         />
 
-        <GameConsole messages={gameState.messages} messagesBottomRef={messagesBottom} />
+        <GameConsole
+          messages={gameState.messages}
+          messagesBottomRef={messagesBottom}
+          localStorageAvailable={localStorageAvailable}
+        />
 
         {(gameState.gameScene === GameScene.BATTLE_BASE || gameState.gameScene === GameScene.BATTLE_SELECT_ATTACK || gameState.gameScene === GameScene.BATTLE_SELECT_ENEMY) && (
           <StatusBars
