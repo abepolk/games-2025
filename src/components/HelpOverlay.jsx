@@ -11,7 +11,7 @@ const HelpOverlay = ({ setHelpHovered, setHelpClicked, helpHovered, helpClicked 
         justify-center
         rounded-full
         font-[Arial]
-        text-2xl
+        text-4xl
         text-gray-100
         bg-[#2e406b]
         hover:bg-[#2e4680]
